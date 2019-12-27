@@ -30,3 +30,6 @@ requires "Moo" => '0';
 requires "Ref::Util" => '0';
 requires "Ref::Util::XS" => '0';
 
+requires "Class::XSAccessor" => '0';
+requires "Class::XSAccessor::Array" => '0';
+
