@@ -1,0 +1,23 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: "J. Nick Koston" <nick@cpanel.net>
+Date: Wed, 15 Aug 2018 07:52:09 -0500
+Subject: [PATCH 22/30] Remove launcher regex in Config.pm
+
+case CPANEL-22292
+---
+ SOURCES/perl/configpm | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/SOURCES/perl/configpm b/SOURCES/perl/configpm
+index 09c4a3b7..215a7f92 100755
+--- a/SOURCES/perl/configpm
++++ b/SOURCES/perl/configpm
+@@ -846,7 +846,7 @@ sub DESTROY { }
+ 
+ sub AUTOLOAD {
+     require 'Config_heavy.pl';
+-    goto \&launcher unless $Config::AUTOLOAD =~ /launcher$/;
++    goto \&launcher unless length($Config::AUTOLOAD) >= 8 && substr($Config::AUTOLOAD,-8) eq 'launcher';
+     die "&Config::AUTOLOAD failed on $Config::AUTOLOAD";
+ }
+ 

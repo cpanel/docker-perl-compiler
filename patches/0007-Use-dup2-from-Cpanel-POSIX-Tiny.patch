@@ -1,0 +1,44 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Nicolas Rochelemagne <rochelemagne@cpanel.net>
+Date: Mon, 14 Nov 2016 05:52:48 -0600
+Subject: [PATCH 07/30] Use dup2 from Cpanel::POSIX::Tiny
+
+Do not call POSIX import from IO::Socket::IP.
+
+When Cpanel::POSIX::Tiny is available we are
+going to use it for dup2 syscall.
+
+Fallback to POSIX::dup2 in other cases.
+
+Upstream-BUG:
+- cPanel: https://jira.cpanel.net/browse/CM-1231
+and https://jira.cpanel.net/browse/CM-1191
+- B::C: https://github.com/rurban/perl-compiler/issues/345
+---
+ SOURCES/perl/cpan/IO-Socket-IP/lib/IO/Socket/IP.pm | 6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
+
+diff --git a/SOURCES/perl/cpan/IO-Socket-IP/lib/IO/Socket/IP.pm b/SOURCES/perl/cpan/IO-Socket-IP/lib/IO/Socket/IP.pm
+index ddecf428..d85bb97c 100644
+--- a/SOURCES/perl/cpan/IO-Socket-IP/lib/IO/Socket/IP.pm
++++ b/SOURCES/perl/cpan/IO-Socket-IP/lib/IO/Socket/IP.pm
+@@ -28,7 +28,6 @@ use Socket 1.97 qw(
+ );
+ my $AF_INET6 = eval { Socket::AF_INET6() }; # may not be defined
+ my $AI_ADDRCONFIG = eval { Socket::AI_ADDRCONFIG() } || 0;
+-use POSIX qw( dup2 );
+ use Errno qw( EINVAL EINPROGRESS EISCONN ENOTCONN ETIMEDOUT EWOULDBLOCK EOPNOTSUPP );
+ 
+ use constant HAVE_MSWIN32 => ( $^O eq "MSWin32" );
+@@ -949,7 +948,10 @@ sub socket :method
+    # I hate core prototypes sometimes...
+    socket( my $tmph, $_[0], $_[1], $_[2] ) or return undef;
+ 
+-   dup2( $tmph->fileno, $self->fileno ) or die "Unable to dup2 $tmph onto $self - $!";
++   if ($tmph->fileno != $self->fileno) {
++     require Cpanel::POSIX::Tiny;
++     Cpanel::POSIX::Tiny::dup2( $tmph->fileno, $self->fileno ) or die "Unable to dup2 $tmph onto $self - $!";
++   }
+ }
+ 
+ # Versions of IO::Socket before 1.35 may leave socktype undef if from, say, an

@@ -1,0 +1,26 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Todd Rinaldo <toddr@cpan.org>
+Date: Wed, 19 Jul 2017 18:36:12 -0500
+Subject: [PATCH 12/30] Provide a way to clear swash invlists for B::C
+
+---
+ SOURCES/perl/lib/utf8_heavy.pl | 6 ++++++
+ 1 file changed, 6 insertions(+)
+
+diff --git a/SOURCES/perl/lib/utf8_heavy.pl b/SOURCES/perl/lib/utf8_heavy.pl
+index ec6dbb69..8538e828 100644
+--- a/SOURCES/perl/lib/utf8_heavy.pl
++++ b/SOURCES/perl/lib/utf8_heavy.pl
+@@ -66,6 +66,12 @@ my $numeric_re = qr! $integer_or_float_re | ^ -? \d+ / \d+ $ !x;
+     # progress, pushed upon entry, popped upon return.
+     my @recursed;
+ 
++    sub reset_swash {
++        undef $min_floating_slop;
++        @recursed = ();
++        %Cache = ();
++    }
++
+     sub SWASHNEW {
+         my ($class, $type, $list, $minbits, $none) = @_;
+         my $user_defined = 0;

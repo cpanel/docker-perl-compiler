@@ -1,0 +1,30 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Todd Rinaldo <toddr@cpan.org>
+Date: Mon, 23 Nov 2015 12:40:58 -0600
+Subject: [PATCH 05/30] Do not warn when close fails because the file handle is
+ bad.
+
+Case CM-1212: The presence of this warning which was put there by
+https://rt.perl.org/Public/Bug/Display.html?id=57512 means that when we do a
+fastclose of file handles after fork, perl emits warnings because the file
+handles were not closed/flushed properly. This is intentional on cPanel's part,
+so we're turning this back off in the smallest way possible.
+
+p5h2017 note: cPanel should keep this patch
+---
+ SOURCES/perl/doio.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/SOURCES/perl/doio.c b/SOURCES/perl/doio.c
+index 0cc4e554..5ad8d716 100644
+--- a/SOURCES/perl/doio.c
++++ b/SOURCES/perl/doio.c
+@@ -1811,7 +1811,7 @@ Perl_io_close(pTHX_ IO *io, GV *gv, bool not_implicit, bool warn_on_fail)
+ 	}
+ 	IoOFP(io) = IoIFP(io) = NULL;
+ 
+-	if (warn_on_fail && !retval) {
++	if (0 && warn_on_fail && !retval) {
+ 	    if (gv)
+ 		Perl_ck_warner_d(aTHX_ packWARN(WARN_IO),
+ 				"Warning: unable to close filehandle %"

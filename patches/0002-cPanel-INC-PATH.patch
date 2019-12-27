@@ -1,0 +1,34 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Todd Rinaldo <toddr@cpanel.net>
+Date: Tue, 7 Feb 2012 18:18:10 -0600
+Subject: [PATCH 02/30] cPanel INC PATH
+
+Re-order INC path so it's VENDOR/CORE/SITELIB
+---
+ SOURCES/perl/perl.c | 7 +++----
+ 1 file changed, 3 insertions(+), 4 deletions(-)
+
+diff --git a/SOURCES/perl/perl.c b/SOURCES/perl/perl.c
+index f2de4795..d45b675c 100644
+--- a/SOURCES/perl/perl.c
++++ b/SOURCES/perl/perl.c
+@@ -4696,16 +4696,15 @@ S_init_perllib(pTHX)
+ /* Use the ~-expanded versions of APPLLIB (undocumented),
+     SITEARCH, SITELIB, VENDORARCH, VENDORLIB, ARCHLIB and PRIVLIB
+ */
+-    INCPUSH_APPLLIB_EXP
+-    INCPUSH_SITEARCH_EXP
+-    INCPUSH_SITELIB_EXP
++    S_incpush_use_sep(aTHX_ STR_WITH_LEN("/usr/local/cpanel"), INCPUSH_CAN_RELOCATE);
+     INCPUSH_PERL_VENDORARCH_EXP
+     INCPUSH_PERL_VENDORLIB_EXP
+     INCPUSH_ARCHLIB_EXP
+     INCPUSH_PRIVLIB_EXP
++    INCPUSH_SITEARCH_EXP
++    INCPUSH_SITELIB_EXP
+     INCPUSH_PERL_OTHERLIBDIRS
+     INCPUSH_PERL5LIB
+-    INCPUSH_APPLLIB_OLD_EXP
+     INCPUSH_SITELIB_STEM
+     INCPUSH_PERL_VENDORLIB_STEM
+     INCPUSH_PERL_OTHERLIBDIRS_ARCHONLY

@@ -1,0 +1,30 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Nicolas Rochelemagne <rochelemagne@cpanel.net>
+Date: Thu, 3 Aug 2017 13:21:33 -0600
+Subject: [PATCH 13/30] Switch several CPAN modules to XSLoader
+
+---
+ SOURCES/perl/cpan/IPC-SysV/lib/IPC/SysV.pm | 8 ++------
+ 1 file changed, 2 insertions(+), 6 deletions(-)
+
+diff --git a/SOURCES/perl/cpan/IPC-SysV/lib/IPC/SysV.pm b/SOURCES/perl/cpan/IPC-SysV/lib/IPC/SysV.pm
+index 4f917b40..2c296cd2 100644
+--- a/SOURCES/perl/cpan/IPC-SysV/lib/IPC/SysV.pm
++++ b/SOURCES/perl/cpan/IPC-SysV/lib/IPC/SysV.pm
+@@ -81,14 +81,10 @@ sub AUTOLOAD
+ 
+ BOOT_XS: {
+   # If I inherit DynaLoader then I inherit AutoLoader and I DON'T WANT TO
+-  require DynaLoader;
++  use XSLoader ();
+ 
+-  # DynaLoader calls dl_load_flags as a static method.
+-  *dl_load_flags = DynaLoader->can('dl_load_flags');
++  XSLoader::load( 'IPC::SysV', $VERSION );
+ 
+-  do {
+-    __PACKAGE__->can('bootstrap') || \&DynaLoader::bootstrap
+-  }->(__PACKAGE__, $VERSION);
+ }
+ 
+ 1;

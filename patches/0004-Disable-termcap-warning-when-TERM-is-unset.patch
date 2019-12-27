@@ -1,0 +1,33 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Nicolas Rochelemagne <rochelemagne@cpanel.net>
+Date: Fri, 24 Jul 2015 10:22:16 -0500
+Subject: [PATCH 04/30] Disable termcap warning when TERM is unset
+
+Upstream-URL:
+https://github.com/rafl/term-readline/pull/5
+---
+ SOURCES/perl/dist/Term-ReadLine/lib/Term/ReadLine.pm | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/SOURCES/perl/dist/Term-ReadLine/lib/Term/ReadLine.pm b/SOURCES/perl/dist/Term-ReadLine/lib/Term/ReadLine.pm
+index 78c1ebf5..cc43cb5a 100644
+--- a/SOURCES/perl/dist/Term-ReadLine/lib/Term/ReadLine.pm
++++ b/SOURCES/perl/dist/Term-ReadLine/lib/Term/ReadLine.pm
+@@ -374,7 +374,7 @@ our $rl_term_set = ',,,';
+ our $terminal;
+ sub LoadTermCap {
+   return if defined $terminal;
+-  
++  return unless $ENV{'TERM'};
+   require Term::Cap;
+   $terminal = Tgetent Term::Cap ({OSPEED => 9600}); # Avoid warning.
+ }
+@@ -388,7 +388,7 @@ sub ornaments {
+   my @ts = split /,/, $rl_term_set, 4;
+   eval { LoadTermCap };
+   unless (defined $terminal) {
+-    warn("Cannot find termcap: $@\n") unless $Term::ReadLine::termcap_nowarn;
++    warn("Cannot find termcap: $@\n") if $ENV{'TERM'} && ! $Term::ReadLine::termcap_nowarn;
+     $rl_term_set = ',,,';
+     return;
+   }

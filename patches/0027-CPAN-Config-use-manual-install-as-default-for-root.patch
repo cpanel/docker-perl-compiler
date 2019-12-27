@@ -1,0 +1,30 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Nicolas Rochelemagne <rochelemagne@cpanel.net>
+Date: Tue, 12 Feb 2019 18:07:23 -0600
+Subject: [PATCH 27/30] CPAN::Config use manual install as default for root
+
+Case CPANEL-25605:
+
+By default prefer to install CPAN modules to
+/opt/cpanel/perl5/52* directory.
+
+References: CPANEL-23475
+
+Upstream-URL: https://github.com/andk/cpanpm/pull/123
+---
+ SOURCES/perl/cpan/CPAN/lib/CPAN/FirstTime.pm | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/SOURCES/perl/cpan/CPAN/lib/CPAN/FirstTime.pm b/SOURCES/perl/cpan/CPAN/lib/CPAN/FirstTime.pm
+index 49fa8ab7..177b0fb6 100644
+--- a/SOURCES/perl/cpan/CPAN/lib/CPAN/FirstTime.pm
++++ b/SOURCES/perl/cpan/CPAN/lib/CPAN/FirstTime.pm
+@@ -845,7 +845,7 @@ sub init {
+     ) {
+         local $auto_config = 0; # We *must* ask, even under autoconfig
+         local *_real_prompt;    # We *must* show prompt
+-        my_prompt_loop(install_help => 'local::lib', $matcher,
++        my_prompt_loop(install_help => ( $> ==  0 ? 'manual' : 'local::lib' ), $matcher,
+                    'local::lib|sudo|manual');
+     }
+     $CPAN::Config->{install_help} ||= ''; # Temporary to suppress warnings

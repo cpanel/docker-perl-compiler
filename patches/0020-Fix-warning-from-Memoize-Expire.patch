@@ -1,0 +1,21 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Nicolas Rochelemagne <rochelemagne@cpanel.net>
+Date: Tue, 17 Jul 2018 15:44:06 -0500
+Subject: [PATCH 20/30] Fix warning from Memoize::Expire
+
+---
+ SOURCES/perl/cpan/Memoize/Memoize/Expire.pm | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/SOURCES/perl/cpan/Memoize/Memoize/Expire.pm b/SOURCES/perl/cpan/Memoize/Memoize/Expire.pm
+index 9b3b9444..eb84068d 100644
+--- a/SOURCES/perl/cpan/Memoize/Memoize/Expire.pm
++++ b/SOURCES/perl/cpan/Memoize/Memoize/Expire.pm
+@@ -54,6 +54,7 @@ sub STORE {
+   # The call that results in a value to store into the cache is the
+   # first of the NUM_USES allowed calls.
+   my $header = _make_header(time, $expire_time, $self->{NUM_USES}-1);
++  $value = '' unless defined $value;
+   $self->{C}{$key} = $header . $value;
+   $value;
+ }

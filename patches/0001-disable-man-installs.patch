@@ -1,0 +1,21 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Todd Rinaldo <toddr@cpanel.net>
+Date: Tue, 16 Jun 2015 18:21:59 -0500
+Subject: [PATCH 01/30] disable man installs
+
+disable perl from installing man during make install
+---
+ SOURCES/perl/installman | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/SOURCES/perl/installman b/SOURCES/perl/installman
+index 0154be4d..4056ee6e 100755
+--- a/SOURCES/perl/installman
++++ b/SOURCES/perl/installman
+@@ -1,5 +1,5 @@
+ #!./perl -w
+-
++exit; # We don't want to install man pages. Configure doesn't offer an option for this.
+ BEGIN {
+     @INC = qw(lib);
+ 

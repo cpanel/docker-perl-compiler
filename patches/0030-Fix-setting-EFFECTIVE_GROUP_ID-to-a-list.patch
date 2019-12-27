@@ -1,0 +1,40 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Nicolas Rochelemagne <rochelemagne@cpanel.net>
+Date: Tue, 8 Oct 2019 12:26:14 -0600
+Subject: [PATCH 30/30] Fix setting EFFECTIVE_GROUP_ID to a list
+
+RT 134486
+
+This is a regression introduced in 5.29.0
+by 5d4a52b5 grok_atoUV: allow non-C strings and document
+
+Making sure we backup the end pointer and restore it
+before calling multiple times grok_atoUV should fix it.
+
+note: also view RT 134169
+
+URL: https://rt.perl.org/Ticket/Display.html?id=134486
+---
+ SOURCES/perl/mg.c | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/SOURCES/perl/mg.c b/SOURCES/perl/mg.c
+index afe452fc..c8131143 100644
+--- a/SOURCES/perl/mg.c
++++ b/SOURCES/perl/mg.c
+@@ -3179,6 +3179,7 @@ Perl_magic_set(pTHX_ SV *sv, MAGIC *mg)
+ 	    const char *p = SvPV_const(sv, len);
+             Groups_t *gary = NULL;
+             const char* endptr = p + len;
++            const char* backup_endptr = endptr;
+             UV uv;
+ #ifdef _SC_NGROUPS_MAX
+            int maxgrp = sysconf(_SC_NGROUPS_MAX);
+@@ -3209,6 +3210,7 @@ Perl_magic_set(pTHX_ SV *sv, MAGIC *mg)
+                     Newx(gary, i + 1, Groups_t);
+                 else
+                     Renew(gary, i + 1, Groups_t);
++                endptr = backup_endptr; /* we know where the end is */
+                 if (grok_atoUV(p, &uv, &endptr))
+                     gary[i] = (Groups_t)uv;
+                 else {

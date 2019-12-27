@@ -1,0 +1,871 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Todd Rinaldo <toddr@cpan.org>
+Date: Fri, 6 Nov 2015 16:23:14 -0600
+Subject: [PATCH 03/30] Avoid importing symbols unless requested
+
+Perl should avoid importing symbols unless requested
+
+Avoid importing Carp functions, do a lazy loading of Carp.
+
+Bug-cPanel: https://jira.cpanel.net/browse/CPANEL-4359
+---
+ .../lib/Compress/Raw/Zlib.pm                  | 43 +++++------
+ .../cpan/IO-Socket-IP/lib/IO/Socket/IP.pm     |  6 +-
+ SOURCES/perl/cpan/Socket/Socket.pm            |  3 +-
+ .../perl/cpan/Time-Local/lib/Time/Local.pm    | 18 +++--
+ SOURCES/perl/dist/IO/IO.pm                    |  3 +-
+ SOURCES/perl/dist/IO/lib/IO/Dir.pm            |  2 +-
+ SOURCES/perl/dist/IO/lib/IO/File.pm           |  2 +-
+ SOURCES/perl/dist/IO/lib/IO/Handle.pm         | 41 ++++++-----
+ SOURCES/perl/dist/IO/lib/IO/Pipe.pm           |  2 +-
+ SOURCES/perl/dist/IO/lib/IO/Seekable.pm       |  2 +-
+ SOURCES/perl/dist/IO/lib/IO/Socket.pm         | 27 ++++---
+ SOURCES/perl/dist/IO/lib/IO/Socket/INET.pm    | 72 +++++++++++--------
+ SOURCES/perl/dist/IO/lib/IO/Socket/UNIX.pm    | 32 ++++++---
+ SOURCES/perl/lib/SelectSaver.pm               |  2 +-
+ 14 files changed, 148 insertions(+), 107 deletions(-)
+
+diff --git a/SOURCES/perl/cpan/Compress-Raw-Zlib/lib/Compress/Raw/Zlib.pm b/SOURCES/perl/cpan/Compress-Raw-Zlib/lib/Compress/Raw/Zlib.pm
+index 4c369738..be8eaf2b 100644
+--- a/SOURCES/perl/cpan/Compress-Raw-Zlib/lib/Compress/Raw/Zlib.pm
++++ b/SOURCES/perl/cpan/Compress-Raw-Zlib/lib/Compress/Raw/Zlib.pm
+@@ -1,9 +1,7 @@
+-
+ package Compress::Raw::Zlib;
+ 
+ require 5.006 ;
+ require Exporter;
+-use Carp ;
+ 
+ use strict ;
+ use warnings ;
+@@ -109,7 +107,7 @@ sub AUTOLOAD {
+     my($constname);
+     ($constname = $AUTOLOAD) =~ s/.*:://;
+     my ($error, $val) = constant($constname);
+-    Carp::croak $error if $error;
++    _croak($error) if $error;
+     no strict 'refs';
+     *{$AUTOLOAD} = sub { $val };
+     goto &{$AUTOLOAD};
+@@ -149,7 +147,10 @@ use constant OFF_FIXED      => 3 ;
+ use constant OFF_FIRST_ONLY => 4 ;
+ use constant OFF_STICKY     => 5 ;
+ 
+-
++sub _croak {
++  require Carp;
++  goto \&Carp::croak;
++}
+ 
+ sub ParseParameters
+ {
+@@ -159,7 +160,7 @@ sub ParseParameters
+     #local $Carp::CarpLevel = 1 ;
+     my $p = new Compress::Raw::Zlib::Parameters() ;
+     $p->parse(@_)
+-        or croak "$sub: $p->{Error}" ;
++        or _croak("$sub: $p->{Error}");
+ 
+     return $p;
+ }
+@@ -234,7 +235,7 @@ sub Compress::Raw::Zlib::Parameters::parse
+ 
+     while (my ($key, $v) = each %$default)
+     {
+-        croak "need 4 params [@$v]"
++        _croak("need 4 params [@$v]")
+             if @$v != 4 ;
+ 
+         my ($first_only, $sticky, $type, $value) = @$v ;
+@@ -394,8 +395,8 @@ sub Compress::Raw::Zlib::Deflate::new
+     my $pkg = shift ;
+     my ($got) = ParseParameters(0, $OPTIONS_deflate, @_);
+ 
+-    croak "Compress::Raw::Zlib::Deflate::new: Bufsize must be >= 1, you specified " . 
+-            $got->value('Bufsize')
++    _croak("Compress::Raw::Zlib::Deflate::new: Bufsize must be >= 1, you specified " . 
++            $got->value('Bufsize'))
+         unless $got->value('Bufsize') >= 1;
+ 
+     my $flags = 0 ;
+@@ -421,13 +422,13 @@ sub Compress::Raw::Zlib::Deflate::new
+ sub Compress::Raw::Zlib::deflateStream::STORABLE_freeze
+ {
+     my $type = ref shift;
+-    croak "Cannot freeze $type object\n";
++    _croak("Cannot freeze $type object\n");
+ }
+ 
+ sub Compress::Raw::Zlib::deflateStream::STORABLE_thaw
+ {
+     my $type = ref shift;
+-    croak "Cannot thaw $type object\n";
++    _croak("Cannot thaw $type object\n");
+ }
+ 
+ 
+@@ -449,8 +450,8 @@ sub Compress::Raw::Zlib::Inflate::new
+     my $pkg = shift ;
+     my ($got) = ParseParameters(0, $OPTIONS_inflate, @_);
+ 
+-    croak "Compress::Raw::Zlib::Inflate::new: Bufsize must be >= 1, you specified " . 
+-            $got->value('Bufsize')
++    _croak("Compress::Raw::Zlib::Inflate::new: Bufsize must be >= 1, you specified " . 
++            $got->value('Bufsize'))
+         unless $got->value('Bufsize') >= 1;
+ 
+     my $flags = 0 ;
+@@ -472,13 +473,13 @@ sub Compress::Raw::Zlib::Inflate::new
+ sub Compress::Raw::Zlib::inflateStream::STORABLE_freeze
+ {
+     my $type = ref shift;
+-    croak "Cannot freeze $type object\n";
++    _croak("Cannot freeze $type object\n");
+ }
+ 
+ sub Compress::Raw::Zlib::inflateStream::STORABLE_thaw
+ {
+     my $type = ref shift;
+-    croak "Cannot thaw $type object\n";
++    _croak("Cannot thaw $type object\n");
+ }
+ 
+ sub Compress::Raw::Zlib::InflateScan::new
+@@ -495,8 +496,8 @@ sub Compress::Raw::Zlib::InflateScan::new
+             }, @_) ;
+ 
+ 
+-    croak "Compress::Raw::Zlib::InflateScan::new: Bufsize must be >= 1, you specified " . 
+-            $got->value('Bufsize')
++    _croak("Compress::Raw::Zlib::InflateScan::new: Bufsize must be >= 1, you specified " . 
++            $got->value('Bufsize'))
+         unless $got->value('Bufsize') >= 1;
+ 
+     my $flags = 0 ;
+@@ -526,8 +527,8 @@ sub Compress::Raw::Zlib::inflateScanStream::createDeflateStream
+                 'Strategy'      => [1, 1, Parse_unsigned, Z_DEFAULT_STRATEGY()],
+             }, @_) ;
+ 
+-    croak "Compress::Raw::Zlib::InflateScan::createDeflateStream: Bufsize must be >= 1, you specified " . 
+-            $got->value('Bufsize')
++    _croak("Compress::Raw::Zlib::InflateScan::createDeflateStream: Bufsize must be >= 1, you specified " . 
++            $got->value('Bufsize'))
+         unless $got->value('Bufsize') >= 1;
+ 
+     my $flags = 0 ;
+@@ -573,12 +574,12 @@ sub Compress::Raw::Zlib::deflateStream::deflateParams
+                 }, 
+                 @_) ;
+ 
+-    croak "Compress::Raw::Zlib::deflateParams needs Level and/or Strategy"
++    _croak("Compress::Raw::Zlib::deflateParams needs Level and/or Strategy")
+         unless $got->parsed('Level') + $got->parsed('Strategy') +
+             $got->parsed('Bufsize');
+ 
+-    croak "Compress::Raw::Zlib::Inflate::deflateParams: Bufsize must be >= 1, you specified " . 
+-            $got->value('Bufsize')
++    _croak("Compress::Raw::Zlib::Inflate::deflateParams: Bufsize must be >= 1, you specified " . 
++            $got->value('Bufsize'))
+         if $got->parsed('Bufsize') && $got->value('Bufsize') <= 1;
+ 
+     my $flags = 0;
+diff --git a/SOURCES/perl/cpan/IO-Socket-IP/lib/IO/Socket/IP.pm b/SOURCES/perl/cpan/IO-Socket-IP/lib/IO/Socket/IP.pm
+index 5a5ee7d2..ddecf428 100644
+--- a/SOURCES/perl/cpan/IO-Socket-IP/lib/IO/Socket/IP.pm
++++ b/SOURCES/perl/cpan/IO-Socket-IP/lib/IO/Socket/IP.pm
+@@ -14,8 +14,6 @@ use strict;
+ use warnings;
+ use base qw( IO::Socket );
+ 
+-use Carp;
+-
+ use Socket 1.97 qw(
+    getaddrinfo getnameinfo
+    sockaddr_family
+@@ -38,6 +36,8 @@ use constant HAVE_MSWIN32 => ( $^O eq "MSWin32" );
+ # At least one OS (Android) is known not to have getprotobyname()
+ use constant HAVE_GETPROTOBYNAME => defined eval { getprotobyname( "tcp" ) };
+ 
++sub croak($) { require Carp; Carp::croak(@_) }
++
+ my $IPv6_re = do {
+    # translation of RFC 3986 3.2.2 ABNF to re
+    my $IPv4address = do {
+@@ -955,7 +955,7 @@ sub socket :method
+ # Versions of IO::Socket before 1.35 may leave socktype undef if from, say, an
+ #   ->fdopen call. In this case we'll apply a fix
+ BEGIN {
+-   if( eval($IO::Socket::VERSION) < 1.35 ) {
++    if( eval($IO::Socket::VERSION) < 1.35 ) {
+       *socktype = sub {
+          my $self = shift;
+          my $type = $self->SUPER::socktype;
+diff --git a/SOURCES/perl/cpan/Socket/Socket.pm b/SOURCES/perl/cpan/Socket/Socket.pm
+index 370deef1..335db855 100644
+--- a/SOURCES/perl/cpan/Socket/Socket.pm
++++ b/SOURCES/perl/cpan/Socket/Socket.pm
+@@ -694,7 +694,6 @@ Paul Evans <leonerd@leonerd.org.uk>
+ 
+ =cut
+ 
+-use Carp;
+ use warnings::register;
+ 
+ require Exporter;
+@@ -833,6 +832,8 @@ BEGIN {
+     sub NIx_NOSERV() {1 << 1}
+ }
+ 
++sub croak($) { require Carp; Carp::croak(@_) }
++
+ *CR   = \CR();
+ *LF   = \LF();
+ *CRLF = \CRLF();
+diff --git a/SOURCES/perl/cpan/Time-Local/lib/Time/Local.pm b/SOURCES/perl/cpan/Time-Local/lib/Time/Local.pm
+index b5a62bb5..5fac45d1 100644
+--- a/SOURCES/perl/cpan/Time-Local/lib/Time/Local.pm
++++ b/SOURCES/perl/cpan/Time-Local/lib/Time/Local.pm
+@@ -2,7 +2,6 @@ package Time::Local;
+ 
+ use strict;
+ 
+-use Carp ();
+ use Exporter;
+ 
+ our $VERSION = '1.28';
+@@ -119,7 +118,7 @@ sub timegm {
+     }
+ 
+     unless ( $Options{no_range_check} ) {
+-        Carp::croak("Month '$month' out of range 0..11")
++        _croak("Month '$month' out of range 0..11")
+             if $month > 11
+             or $month < 0;
+ 
+@@ -127,13 +126,13 @@ sub timegm {
+         ++$md
+             if $month == 1 && _is_leap_year( $year + 1900 );
+ 
+-        Carp::croak("Day '$mday' out of range 1..$md")
++        _croak("Day '$mday' out of range 1..$md")
+             if $mday > $md or $mday < 1;
+-        Carp::croak("Hour '$hour' out of range 0..23")
++        _croak("Hour '$hour' out of range 0..23")
+             if $hour > 23 or $hour < 0;
+-        Carp::croak("Minute '$min' out of range 0..59")
++        _croak("Minute '$min' out of range 0..59")
+             if $min > 59 or $min < 0;
+-        Carp::croak("Second '$sec' out of range 0..59")
++        _croak("Second '$sec' out of range 0..59")
+             if $sec >= 60 or $sec < 0;
+     }
+ 
+@@ -147,7 +146,7 @@ sub timegm {
+         $msg
+             .= "Cannot handle date ($sec, $min, $hour, $mday, $month, $year)";
+ 
+-        Carp::croak($msg);
++        _croak($msg);
+     }
+ 
+     return
+@@ -222,6 +221,11 @@ sub timelocal_modern {
+     return &timelocal;
+ }
+ 
++sub _croak {
++    require Carp;
++    return Carp::croak(@_);
++}
++
+ 1;
+ 
+ # ABSTRACT: Efficiently compute time from local and GMT time
+diff --git a/SOURCES/perl/dist/IO/IO.pm b/SOURCES/perl/dist/IO/IO.pm
+index 44c4df84..ccba28bd 100644
+--- a/SOURCES/perl/dist/IO/IO.pm
++++ b/SOURCES/perl/dist/IO/IO.pm
+@@ -3,7 +3,6 @@
+ package IO;
+ 
+ use XSLoader ();
+-use Carp;
+ use strict;
+ use warnings;
+ 
+@@ -21,7 +20,7 @@ sub import {
+     local @INC = @INC;
+     pop @INC if $INC[-1] eq '.';
+     eval join("", map { "require IO::" . (/(\w+)/)[0] . ";\n" } @l)
+-	or croak $@;
++        or do { require Carp; Carp::croak($@) };
+ }
+ 
+ 1;
+diff --git a/SOURCES/perl/dist/IO/lib/IO/Dir.pm b/SOURCES/perl/dist/IO/lib/IO/Dir.pm
+index e381880b..21a5fcc5 100644
+--- a/SOURCES/perl/dist/IO/lib/IO/Dir.pm
++++ b/SOURCES/perl/dist/IO/lib/IO/Dir.pm
+@@ -9,7 +9,7 @@ package IO::Dir;
+ use 5.008_001;
+ 
+ use strict;
+-use Carp;
++BEGIN { sub croak($) { require Carp; Carp::croak(@_) } }
+ use Symbol;
+ use Exporter;
+ use IO::File;
+diff --git a/SOURCES/perl/dist/IO/lib/IO/File.pm b/SOURCES/perl/dist/IO/lib/IO/File.pm
+index 137ba540..6ab5e0f4 100644
+--- a/SOURCES/perl/dist/IO/lib/IO/File.pm
++++ b/SOURCES/perl/dist/IO/lib/IO/File.pm
+@@ -126,7 +126,6 @@ Derived from FileHandle.pm by Graham Barr E<lt>F<gbarr@pobox.com>E<gt>.
+ 
+ use 5.008_001;
+ use strict;
+-use Carp;
+ use Symbol;
+ use SelectSaver;
+ use IO::Seekable;
+@@ -150,6 +149,7 @@ eval {
+ ################################################
+ ## Constructor
+ ##
++BEGIN { sub croak($) { require Carp; Carp::croak(@_) } }
+ 
+ sub new {
+     my $type = shift;
+diff --git a/SOURCES/perl/dist/IO/lib/IO/Handle.pm b/SOURCES/perl/dist/IO/lib/IO/Handle.pm
+index a2570246..adc975d5 100644
+--- a/SOURCES/perl/dist/IO/lib/IO/Handle.pm
++++ b/SOURCES/perl/dist/IO/lib/IO/Handle.pm
+@@ -262,10 +262,10 @@ Derived from FileHandle.pm by Graham Barr E<lt>F<gbarr@pobox.com>E<gt>
+ 
+ use 5.008_001;
+ use strict;
+-use Carp;
+-use Symbol;
+-use SelectSaver;
+-use IO ();	# Load the XS module
++use Symbol      ();
++use SelectSaver ();
++use IO          (); # Load the XS module
++use Exporter    ();  # not a require because we want it to happen before INIT
+ 
+ require Exporter;
+ our @ISA = qw(Exporter);
+@@ -304,6 +304,11 @@ our @EXPORT_OK = qw(
+     _IONBF
+ );
+ 
++BEGIN {
++    sub croak($) { require Carp; Carp::croak(@_) }
++    sub carp($) { require Carp; Carp::carp(@_) }
++}
++
+ ################################################
+ ## Constructors, destructors.
+ ##
+@@ -322,14 +327,14 @@ sub new {
+ 	}
+ 	croak "usage: $class->new()";
+     }
+-    my $io = gensym;
++    my $io = Symbol::gensym;
+     bless $io, $class;
+ }
+ 
+ sub new_from_fd {
+     my $class = ref($_[0]) || $_[0] || "IO::Handle";
+     @_ == 3 or croak "usage: $class->new_from_fd(FD, MODE)";
+-    my $io = gensym;
++    my $io = Symbol::gensym;
+     shift;
+     IO::Handle::fdopen($io, @_)
+ 	or return undef;
+@@ -366,7 +371,7 @@ sub fdopen {
+ 
+     if (ref($fd) && "$fd" =~ /GLOB\(/o) {
+ 	# It's a glob reference; Alias it as we cannot get name of anon GLOBs
+-	my $n = qualify(*GLOB);
++	my $n = Symbol::qualify(*GLOB);
+ 	*GLOB = *{*$fd};
+ 	$fd =  $n;
+     } elsif ($fd =~ m#^\d+$#) {
+@@ -492,7 +497,7 @@ sub stat {
+ ##
+ 
+ sub autoflush {
+-    my $old = SelectSaver->new(qualify($_[0], caller));
++    my $old = SelectSaver->new(Symbol::qualify($_[0], caller));
+     my $prev = $|;
+     $| = @_ > 1 ? $_[1] : 1;
+     $prev;
+@@ -524,7 +529,7 @@ sub input_record_separator {
+ 
+ sub input_line_number {
+     local $.;
+-    () = tell qualify($_[0], caller) if ref($_[0]);
++    () = tell Symbol::qualify($_[0], caller) if ref($_[0]);
+     my $prev = $.;
+     $. = $_[1] if @_ > 1;
+     $prev;
+@@ -532,7 +537,7 @@ sub input_line_number {
+ 
+ sub format_page_number {
+     my $old;
+-    $old = SelectSaver->new(qualify($_[0], caller)) if ref($_[0]);
++    $old = SelectSaver->new(Symbol::qualify($_[0], caller)) if ref($_[0]);
+     my $prev = $%;
+     $% = $_[1] if @_ > 1;
+     $prev;
+@@ -540,7 +545,7 @@ sub format_page_number {
+ 
+ sub format_lines_per_page {
+     my $old;
+-    $old = SelectSaver->new(qualify($_[0], caller)) if ref($_[0]);
++    $old = SelectSaver->new(Symbol::qualify($_[0], caller)) if ref($_[0]);
+     my $prev = $=;
+     $= = $_[1] if @_ > 1;
+     $prev;
+@@ -548,7 +553,7 @@ sub format_lines_per_page {
+ 
+ sub format_lines_left {
+     my $old;
+-    $old = SelectSaver->new(qualify($_[0], caller)) if ref($_[0]);
++    $old = SelectSaver->new(Symbol::qualify($_[0], caller)) if ref($_[0]);
+     my $prev = $-;
+     $- = $_[1] if @_ > 1;
+     $prev;
+@@ -556,17 +561,17 @@ sub format_lines_left {
+ 
+ sub format_name {
+     my $old;
+-    $old = SelectSaver->new(qualify($_[0], caller)) if ref($_[0]);
++    $old = SelectSaver->new(Symbol::qualify($_[0], caller)) if ref($_[0]);
+     my $prev = $~;
+-    $~ = qualify($_[1], caller) if @_ > 1;
++    $~ = Symbol::qualify($_[1], caller) if @_ > 1;
+     $prev;
+ }
+ 
+ sub format_top_name {
+     my $old;
+-    $old = SelectSaver->new(qualify($_[0], caller)) if ref($_[0]);
++    $old = SelectSaver->new(Symbol::qualify($_[0], caller)) if ref($_[0]);
+     my $prev = $^;
+-    $^ = qualify($_[1], caller) if @_ > 1;
++    $^ = Symbol::qualify($_[1], caller) if @_ > 1;
+     $prev;
+ }
+ 
+@@ -599,7 +604,7 @@ sub format_write {
+     @_ < 3 || croak 'usage: $io->write( [FORMAT_NAME] )';
+     if (@_ == 2) {
+ 	my ($io, $fmt) = @_;
+-	my $oldfmt = $io->format_name(qualify($fmt,caller));
++	my $oldfmt = $io->format_name(Symbol::qualify($fmt,caller));
+ 	CORE::write($io);
+ 	$io->format_name($oldfmt);
+     } else {
+@@ -638,7 +643,7 @@ sub constant {
+ sub printflush {
+     my $io = shift;
+     my $old;
+-    $old = SelectSaver->new(qualify($io, caller)) if ref($io);
++    $old = SelectSaver->new(Symbol::qualify($io, caller)) if ref($io);
+     local $| = 1;
+     if(ref($io)) {
+         print $io @_;
+diff --git a/SOURCES/perl/dist/IO/lib/IO/Pipe.pm b/SOURCES/perl/dist/IO/lib/IO/Pipe.pm
+index e314c88d..da0b9835 100644
+--- a/SOURCES/perl/dist/IO/lib/IO/Pipe.pm
++++ b/SOURCES/perl/dist/IO/lib/IO/Pipe.pm
+@@ -10,7 +10,7 @@ use 5.008_001;
+ 
+ use IO::Handle;
+ use strict;
+-use Carp;
++BEGIN { sub croak($) { require Carp; Carp::croak(@_) } }
+ use Symbol;
+ 
+ our $VERSION = "1.40";
+diff --git a/SOURCES/perl/dist/IO/lib/IO/Seekable.pm b/SOURCES/perl/dist/IO/lib/IO/Seekable.pm
+index 48f6dbea..1f2e51b5 100644
+--- a/SOURCES/perl/dist/IO/lib/IO/Seekable.pm
++++ b/SOURCES/perl/dist/IO/lib/IO/Seekable.pm
+@@ -95,7 +95,7 @@ Derived from FileHandle.pm by Graham Barr E<lt>gbarr@pobox.comE<gt>
+ =cut
+ 
+ use 5.008_001;
+-use Carp;
++BEGIN { sub croak($) { require Carp; Carp::croak(@_) } }
+ use strict;
+ use IO::Handle ();
+ # XXX we can't get these from IO::Handle or we'll get prototype
+diff --git a/SOURCES/perl/dist/IO/lib/IO/Socket.pm b/SOURCES/perl/dist/IO/lib/IO/Socket.pm
+index 1bf57ab8..f470ae93 100644
+--- a/SOURCES/perl/dist/IO/lib/IO/Socket.pm
++++ b/SOURCES/perl/dist/IO/lib/IO/Socket.pm
+@@ -9,12 +9,13 @@ package IO::Socket;
+ 
+ use 5.008_001;
+ 
+-use IO::Handle;
+-use Socket 1.3;
+-use Carp;
++use IO::Handle ();
++use Socket 1.3 ();
+ use strict;
+-use Exporter;
+-use Errno;
++use Exporter   ();  # not a require because we want it to happen before INIT
++use Errno      ();
++
++BEGIN { sub croak($) { require Carp; Carp::croak(@_) } }
+ 
+ # legacy
+ 
+@@ -32,7 +33,12 @@ sub import {
+     if (@_ && $_[0] eq 'sockatmark') { # not very extensible but for now, fast
+ 	Exporter::export_to_level('IO::Socket', 1, $pkg, 'sockatmark');
+     } else {
+-	my $callpkg = caller;
++
++#
++# For compatibilty, if we ask to import this module we need to give them
++# all the IO::Handle and Socket symbols that are no longer imported in order to reduce memory usage
++#
++    my $callpkg = caller;
+ 	Exporter::export 'Socket', $callpkg, @_;
+     }
+ }
+@@ -126,7 +132,7 @@ sub connect {
+ 		# Using the exception
+ 		# set we now emulate the behavior in Linux
+ 		#    - Karthik Rajagopalan
+-		$err = $sock->getsockopt(SOL_SOCKET,SO_ERROR);
++		$err = $sock->getsockopt(&Socket::SOL_SOCKET, &Socket::SO_ERROR);
+ 		$@ = "connect: $err";
+ 	    }
+ 	    elsif(!@$w[0]) {
+@@ -157,7 +163,6 @@ sub connect {
+ 
+     $err ? undef : $sock;
+ }
+-
+ # Enable/disable blocking IO on sockets.
+ # Without args return the current status of blocking,
+ # with args change the mode as appropriate, returning the
+@@ -328,8 +333,8 @@ sub getsockopt {
+ 
+ sub sockopt {
+     my $sock = shift;
+-    @_ == 1 ? $sock->getsockopt(SOL_SOCKET,@_)
+-	    : $sock->setsockopt(SOL_SOCKET,@_);
++    @_ == 1 ? $sock->getsockopt(&Socket::SOL_SOCKET,@_)
++	    : $sock->setsockopt(&Socket::SOL_SOCKET,@_);
+ }
+ 
+ sub atmark {
+@@ -354,7 +359,7 @@ sub sockdomain {
+     my $sock = shift;
+     if (!defined(${*$sock}{'io_socket_domain'})) {
+ 	my $addr = $sock->sockname();
+-	${*$sock}{'io_socket_domain'} = sockaddr_family($addr)
++	${*$sock}{'io_socket_domain'} = Socket::sockaddr_family($addr)
+ 	    if (defined($addr));
+     }
+     ${*$sock}{'io_socket_domain'};
+diff --git a/SOURCES/perl/dist/IO/lib/IO/Socket/INET.pm b/SOURCES/perl/dist/IO/lib/IO/Socket/INET.pm
+index 8b4373f2..2dfac3d5 100644
+--- a/SOURCES/perl/dist/IO/lib/IO/Socket/INET.pm
++++ b/SOURCES/perl/dist/IO/lib/IO/Socket/INET.pm
+@@ -7,29 +7,43 @@
+ package IO::Socket::INET;
+ 
+ use strict;
+-use IO::Socket;
+-use Socket;
+-use Carp;
+-use Exporter;
+-use Errno;
++use IO::Socket ();
++use Socket     ();
++use Exporter   ();
++use Errno      ();
++BEGIN { sub croak($) { require Carp; Carp::croak(@_) } }
+ 
+ our @ISA = qw(IO::Socket);
+ our $VERSION = "1.40";
+ 
+ my $EINVAL = exists(&Errno::EINVAL) ? Errno::EINVAL() : 1;
+ 
+-IO::Socket::INET->register_domain( AF_INET );
++IO::Socket::INET->register_domain( &Socket::AF_INET );
+ 
+-my %socket_type = ( tcp  => SOCK_STREAM,
+-		    udp  => SOCK_DGRAM,
+-		    icmp => SOCK_RAW
+-		  );
++my %socket_type = ( tcp  => &Socket::SOCK_STREAM,
++                    udp  => &Socket::SOCK_DGRAM,
++                    icmp => &Socket::SOCK_RAW
++                  );
+ my %proto_number;
+ $proto_number{tcp}  = Socket::IPPROTO_TCP()  if defined &Socket::IPPROTO_TCP;
+ $proto_number{udp}  = Socket::IPPROTO_UDP()  if defined &Socket::IPPROTO_UDP;
+ $proto_number{icmp} = Socket::IPPROTO_ICMP() if defined &Socket::IPPROTO_ICMP;
+ my %proto_name = reverse %proto_number;
+ 
++#
++# For compatibilty, if we ask to import this module we need to give them
++# all the Socket symbols that are no longer imported in order to reduce memory usage
++#
++sub import {
++    my $pkg = shift;
++    if (@_ && $_[0] eq 'sockatmark') { # not very extensible but for now, fast
++        Exporter::export_to_level('IO::Socket', 1, $pkg, 'sockatmark');
++    } else {
++        my $callpkg = caller;
++        Exporter::export 'Socket', $callpkg, @_;
++    }
++}
++
+ sub new {
+     my $class = shift;
+     unshift(@_, "PeerAddr") if @_ == 1;
+@@ -127,7 +141,7 @@ sub _get_addr {
+     if ($multi && $addr_str !~ /^\d+(?:\.\d+){3}$/) {
+ 	(undef, undef, undef, undef, @addr) = gethostbyname($addr_str);
+     } else {
+-	my $h = inet_aton($addr_str);
++	my $h = Socket::inet_aton($addr_str);
+ 	push(@addr, $h) if defined $h;
+     }
+     @addr;
+@@ -146,8 +160,8 @@ sub configure {
+ 					$arg->{Proto})
+ 			or return _error($sock, $!, $@);
+ 
+-    $laddr = defined $laddr ? inet_aton($laddr)
+-			    : INADDR_ANY;
++    $laddr = defined $laddr ? Socket::inet_aton($laddr)
++			    : Socket::INADDR_ANY();
+ 
+     return _error($sock, $EINVAL, "Bad hostname '",$arg->{LocalAddr},"'")
+ 	unless(defined $laddr);
+@@ -176,7 +190,7 @@ sub configure {
+ 
+     while(1) {
+ 
+-	$sock->socket(AF_INET, $type, $proto) or
++	$sock->socket(&Socket::AF_INET, $type, $proto) or
+ 	    return _error($sock, $!, "$!");
+ 
+         if (defined $arg->{Blocking}) {
+@@ -185,21 +199,21 @@ sub configure {
+ 	}
+ 
+ 	if ($arg->{Reuse} || $arg->{ReuseAddr}) {
+-	    $sock->sockopt(SO_REUSEADDR,1) or
++	    $sock->sockopt(&Socket::SO_REUSEADDR,1) or
+ 		    return _error($sock, $!, "$!");
+ 	}
+ 
+ 	if ($arg->{ReusePort}) {
+-	    $sock->sockopt(SO_REUSEPORT,1) or
++	    $sock->sockopt(&Socket::SO_REUSEPORT,1) or
+ 		    return _error($sock, $!, "$!");
+ 	}
+ 
+ 	if ($arg->{Broadcast}) {
+-		$sock->sockopt(SO_BROADCAST,1) or
++		$sock->sockopt(&Socket::SO_BROADCAST,1) or
+ 		    return _error($sock, $!, "$!");
+ 	}
+ 
+-	if($lport || ($laddr ne INADDR_ANY) || exists $arg->{Listen}) {
++	if($lport || ($laddr ne Socket::INADDR_ANY()) || exists $arg->{Listen}) {
+ 	    $sock->bind($lport || 0, $laddr) or
+ 		    return _error($sock, $!, "$!");
+ 	}
+@@ -216,10 +230,10 @@ sub configure {
+         $raddr = shift @raddr;
+ 
+ 	return _error($sock, $EINVAL, 'Cannot determine remote port')
+-		unless($rport || $type == SOCK_DGRAM || $type == SOCK_RAW);
++		unless($rport || $type == &Socket::SOCK_DGRAM || $type == &Socket::SOCK_RAW);
+ 
+ 	last
+-	    unless($type == SOCK_STREAM || defined $raddr);
++	    unless($type == &Socket::SOCK_STREAM || defined $raddr);
+ 
+ 	return _error($sock, $EINVAL, "Bad hostname '",$arg->{PeerAddr},"'")
+ 	    unless defined $raddr;
+@@ -228,7 +242,7 @@ sub configure {
+ #        my $before = time() if $timeout;
+ 
+ 	undef $@;
+-        if ($sock->connect(pack_sockaddr_in($rport, $raddr))) {
++        if ($sock->connect(Socket::pack_sockaddr_in($rport, $raddr))) {
+ #            ${*$sock}{'io_socket_timeout'} = $timeout;
+             return $sock;
+         }
+@@ -253,56 +267,56 @@ sub connect {
+     @_ == 2 || @_ == 3 or
+        croak 'usage: $sock->connect(NAME) or $sock->connect(PORT, ADDR)';
+     my $sock = shift;
+-    return $sock->SUPER::connect(@_ == 1 ? shift : pack_sockaddr_in(@_));
++    return $sock->SUPER::connect(@_ == 1 ? shift : Socket::pack_sockaddr_in(@_));
+ }
+ 
+ sub bind {
+     @_ == 2 || @_ == 3 or
+        croak 'usage: $sock->bind(NAME) or $sock->bind(PORT, ADDR)';
+     my $sock = shift;
+-    return $sock->SUPER::bind(@_ == 1 ? shift : pack_sockaddr_in(@_))
++    return $sock->SUPER::bind(@_ == 1 ? shift : Socket::pack_sockaddr_in(@_))
+ }
+ 
+ sub sockaddr {
+     @_ == 1 or croak 'usage: $sock->sockaddr()';
+     my($sock) = @_;
+     my $name = $sock->sockname;
+-    $name ? (sockaddr_in($name))[1] : undef;
++    $name ? (Socket::sockaddr_in($name))[1] : undef;
+ }
+ 
+ sub sockport {
+     @_ == 1 or croak 'usage: $sock->sockport()';
+     my($sock) = @_;
+     my $name = $sock->sockname;
+-    $name ? (sockaddr_in($name))[0] : undef;
++    $name ? (Socket::sockaddr_in($name))[0] : undef;
+ }
+ 
+ sub sockhost {
+     @_ == 1 or croak 'usage: $sock->sockhost()';
+     my($sock) = @_;
+     my $addr = $sock->sockaddr;
+-    $addr ? inet_ntoa($addr) : undef;
++    $addr ? Socket::inet_ntoa($addr) : undef;
+ }
+ 
+ sub peeraddr {
+     @_ == 1 or croak 'usage: $sock->peeraddr()';
+     my($sock) = @_;
+     my $name = $sock->peername;
+-    $name ? (sockaddr_in($name))[1] : undef;
++    $name ? (Socket::sockaddr_in($name))[1] : undef;
+ }
+ 
+ sub peerport {
+     @_ == 1 or croak 'usage: $sock->peerport()';
+     my($sock) = @_;
+     my $name = $sock->peername;
+-    $name ? (sockaddr_in($name))[0] : undef;
++    $name ? (Socket::sockaddr_in($name))[0] : undef;
+ }
+ 
+ sub peerhost {
+     @_ == 1 or croak 'usage: $sock->peerhost()';
+     my($sock) = @_;
+     my $addr = $sock->peeraddr;
+-    $addr ? inet_ntoa($addr) : undef;
++    $addr ? Socket::inet_ntoa($addr) : undef;
+ }
+ 
+ 1;
+diff --git a/SOURCES/perl/dist/IO/lib/IO/Socket/UNIX.pm b/SOURCES/perl/dist/IO/lib/IO/Socket/UNIX.pm
+index ff38af0f..236b92b2 100644
+--- a/SOURCES/perl/dist/IO/lib/IO/Socket/UNIX.pm
++++ b/SOURCES/perl/dist/IO/lib/IO/Socket/UNIX.pm
+@@ -7,13 +7,25 @@
+ package IO::Socket::UNIX;
+ 
+ use strict;
+-use IO::Socket;
+-use Carp;
++use IO::Socket ();
++use Socket     ();
++use Exporter   ();
++BEGIN { sub croak($) { require Carp; Carp::croak(@_) } }
+ 
+ our @ISA = qw(IO::Socket);
+ our $VERSION = "1.40";
+ 
+-IO::Socket::UNIX->register_domain( AF_UNIX );
++IO::Socket::UNIX->register_domain( &Socket::AF_UNIX );
++
++#
++# For compatibilty, if we ask to import this module we need to give them
++# all the Socket symbols that are no longer imported in order to reduce memory usage
++#
++sub import {
++    my $pkg = shift;
++    my $callpkg = caller;
++    Exporter::export 'Socket', $callpkg, @_;
++}
+ 
+ sub new {
+     my $class = shift;
+@@ -25,22 +37,22 @@ sub configure {
+     my($sock,$arg) = @_;
+     my($bport,$cport);
+ 
+-    my $type = $arg->{Type} || SOCK_STREAM;
++    my $type = $arg->{Type} || &Socket::SOCK_STREAM;
+ 
+-    $sock->socket(AF_UNIX, $type, 0) or
++    $sock->socket(&Socket::AF_UNIX, $type, 0) or
+ 	return undef;
+ 
+     if(exists $arg->{Local}) {
+-	my $addr = sockaddr_un($arg->{Local});
++	my $addr = Socket::sockaddr_un($arg->{Local});
+ 	$sock->bind($addr) or
+ 	    return undef;
+     }
+-    if(exists $arg->{Listen} && $type != SOCK_DGRAM) {
++    if(exists $arg->{Listen} && $type != &Socket::SOCK_DGRAM) {
+ 	$sock->listen($arg->{Listen} || 5) or
+ 	    return undef;
+     }
+     elsif(exists $arg->{Peer}) {
+-	my $addr = sockaddr_un($arg->{Peer});
++	my $addr = Socket::sockaddr_un($arg->{Peer});
+ 	$sock->connect($addr) or
+ 	    return undef;
+     }
+@@ -51,13 +63,13 @@ sub configure {
+ sub hostpath {
+     @_ == 1 or croak 'usage: $sock->hostpath()';
+     my $n = $_[0]->sockname || return undef;
+-    (sockaddr_un($n))[0];
++    (Socket::sockaddr_un($n))[0];
+ }
+ 
+ sub peerpath {
+     @_ == 1 or croak 'usage: $sock->peerpath()';
+     my $n = $_[0]->peername || return undef;
+-    (sockaddr_un($n))[0];
++    (Socket::sockaddr_un($n))[0];
+ }
+ 
+ 1; # Keep require happy
+diff --git a/SOURCES/perl/lib/SelectSaver.pm b/SOURCES/perl/lib/SelectSaver.pm
+index b67adff4..15412979 100644
+--- a/SOURCES/perl/lib/SelectSaver.pm
++++ b/SOURCES/perl/lib/SelectSaver.pm
+@@ -35,8 +35,8 @@ that was selected when it was created.
+ =cut
+ 
+ require 5.000;
+-use Carp;
+ use Symbol;
++BEGIN { sub croak($) { require Carp; Carp::croak(@_) } }
+ 
+ sub new {
+     @_ >= 1 && @_ <= 2 or croak 'usage: SelectSaver->new( [FILEHANDLE] )';

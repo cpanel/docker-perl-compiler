@@ -1,0 +1,40 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: "J. Nick Koston" <nick@cpanel.net>
+Date: Sun, 30 Apr 2017 17:21:16 -0500
+Subject: [PATCH 09/30] Avoid use vars when our will do in Core Perl
+
+* MIME::Base64 changes submitted upstream via
+https://github.com/gisle/mime-base64/pull/5
+
+* parent merge request is available at:
+https://github.com/Corion/parent/pull/8
+
+* other changes are submitted to p5p via RT 132077
+https://rt.perl.org/Ticket/Display.html?id=132077
+---
+ SOURCES/perl/cpan/MIME-Base64/Base64.pm | 9 ++++-----
+ 1 file changed, 4 insertions(+), 5 deletions(-)
+
+diff --git a/SOURCES/perl/cpan/MIME-Base64/Base64.pm b/SOURCES/perl/cpan/MIME-Base64/Base64.pm
+index 120cd728..e5bc2779 100644
+--- a/SOURCES/perl/cpan/MIME-Base64/Base64.pm
++++ b/SOURCES/perl/cpan/MIME-Base64/Base64.pm
+@@ -1,14 +1,13 @@
+ package MIME::Base64;
+ 
+ use strict;
+-use vars qw(@ISA @EXPORT @EXPORT_OK $VERSION);
+ 
+ require Exporter;
+-@ISA = qw(Exporter);
+-@EXPORT = qw(encode_base64 decode_base64);
+-@EXPORT_OK = qw(encode_base64url decode_base64url encoded_base64_length decoded_base64_length);
++our @ISA = qw(Exporter);
++our @EXPORT = qw(encode_base64 decode_base64);
++our @EXPORT_OK = qw(encode_base64url decode_base64url encoded_base64_length decoded_base64_length);
+ 
+-$VERSION = '3.15';
++our $VERSION = '3.15';
+ 
+ require XSLoader;
+ XSLoader::load('MIME::Base64', $VERSION);
