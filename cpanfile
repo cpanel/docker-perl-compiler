@@ -26,3 +26,7 @@ requires "Net::DNS" => '0';
 requires "Net::LibIDN" => '0';
 requires "Net::SSLeay" => '0';
 requires "Moo" => '0';
+
+requires "Ref::Util" => '0';
+requires "Ref::Util::XS" => '0';
+
