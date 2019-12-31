@@ -13,8 +13,11 @@ echo "*********************************"
 PERL_VERSION=5.30.0
 PERL_MAJOR_VERSION=530
 PERL_TAG=v${PERL_VERSION}
+
 PREFIX=/usr/local/cpanel/3rdparty/perl/${PERL_MAJOR_VERSION}
-PERL_LIB_ROOT=/usr/local/cpanel/3rdparty/perl/${PERL_MAJOR_VERSION}/lib/perl5
+PERL_LIB_ROOT=${PREFIX}/lib/perl5
+
+SITE_PREFIX=/opt/cpanel/perl5/${PERL_MAJOR_VERSION}
 
 ####################################
 
@@ -61,13 +64,13 @@ sh Configure -des \
    -Dhint=recommended \
    -Duseperlio=yes \
    -Dprefix=${PREFIX} \
-   -Dsiteprefix=/opt/cpanel/perl5/${PERL_MAJOR_VERSION} \
-   -Dsitebin=/opt/cpanel/perl5/${PERL_MAJOR_VERSION}/bin \
-   -Dsitelib=/opt/cpanel/perl5/${PERL_MAJOR_VERSION}/site_lib \
+   -Dsiteprefix=${SITE_PREFIX} \
+   -Dsitebin=${SITE_PREFIX}/bin \
+   -Dsitelib=${SITE_PREFIX}/site_lib \
    -Dusevendorprefix=true \
    -Dvendorbin=${PREFIX}/bin \
    -Dvendorprefix=${PERL_LIB_ROOT} \
-   -Dvendorlib=${PERL_LIB_ROOT}/cpanel_lib \
+   -Dvendorlib=${PERL_LIB_ROOT}/vendor_lib \
    -Dprivlib=${PERL_LIB_ROOT}/${PERL_VERSION} \
    -Dman1dir=none \
    -Dman3dir=none \
