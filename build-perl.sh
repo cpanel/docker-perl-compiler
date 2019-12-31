@@ -14,10 +14,12 @@ PERL_VERSION=5.30.0
 PERL_MAJOR_VERSION=530
 PERL_TAG=v${PERL_VERSION}
 
-PREFIX=/usr/local/cpanel/3rdparty/perl/${PERL_MAJOR_VERSION}
+PERL_NAME=bc
+
+PREFIX=/usr/local/${PERL_NAME}/3rdparty/perl/${PERL_MAJOR_VERSION}
 PERL_LIB_ROOT=${PREFIX}/lib/perl5
 
-SITE_PREFIX=/opt/cpanel/perl5/${PERL_MAJOR_VERSION}
+SITE_PREFIX=/opt/${PERL_NAME}/perl5/${PERL_MAJOR_VERSION}
 
 ####################################
 
