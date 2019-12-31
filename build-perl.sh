@@ -10,6 +10,8 @@ echo "*********************************"
 ## Enviornment Variables          ##
 ####################################
 
+WORKDIR="$(pwd)"
+
 PERL_VERSION=5.30.0
 PERL_MAJOR_VERSION=530
 PERL_TAG=v${PERL_VERSION}
@@ -105,12 +107,15 @@ make install
 echo "create symlink"
 ln -s ${PREFIX}/bin/perl /usr/local/bin/perl
 
+# ensure we are going to use the current symlink with our PATH
+[ "$(which perl)" == "/usr/local/bin/perl" ] || exit 127;
+
 echo "."
 echo "*********************************"
 echo "** Check"
 echo "*********************************"
 
-${PREFIX}/bin/perl -v
+perl -v
 
 echo "."
 echo "*********************************"
@@ -126,7 +131,22 @@ echo "*********************************"
 echo "** Installing dependencies"
 echo "*********************************"
 
-${PREFIX}/bin/perl /usr/bin/cpm install -g --no-test --cpanfile /build-perl/cpanfile
+perl /usr/bin/cpm install -g --no-test --cpanfile /build-perl/cpanfile
+
+echo "."
+echo "*********************************"
+echo "** Custom patched modules..."
+echo "*********************************"
+
+# changes are merged upstream but not in the last release which is 1.19
+#     this can be removed once 1.20 is released
+echo "** Class::XSAccessor"
+cd ${WORKDIR}
+git clone https://github.com/tsee/Class-XSAccessor.git
+cd Class-XSAccessor
+perl Makefile.PL
+make
+make install
 
 echo "."
 echo "*********************************"

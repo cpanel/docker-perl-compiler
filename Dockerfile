@@ -18,7 +18,8 @@ RUN yum install -y \
 	openssl \
 	openssl-devel \
 	patch \
-	which
+	which \
+	wget
 
 VOLUME [ "/build-perl" ]
 
