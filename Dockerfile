@@ -6,7 +6,6 @@ ADD . /build-perl/
 
 WORKDIR /build-perl
 
-#RUN yum install -y git
 RUN yum install -y \
 	expat \
 	expat-devel \
@@ -24,7 +23,5 @@ RUN yum install -y \
 VOLUME [ "/build-perl" ]
 
 RUN /build-perl/build-perl.sh
-#CMD ["/build-perl/build-perl.sh"]
 
-# Code file to execute when the docker container starts up (`entrypoint.sh`)
 ENTRYPOINT ["/build-perl/entrypoint.sh"]
