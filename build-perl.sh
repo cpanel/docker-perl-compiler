@@ -1,18 +1,36 @@
 #!/bin/sh -l
 
-#echo "Hello $1"
-echo "Start container"
+set -e
+
+echo "*********************************"
+echo "** Start container: $0"
+echo "*********************************"
+
+####################################
+## Enviornment Variables          ##
+####################################
+
+PERL_VERSION=5.30.0
+PERL_MAJOR_VERSION=530
+PERL_TAG=v${PERL_VERSION}
+PREFIX=/usr/local/cpanel/3rdparty/perl/${PERL_MAJOR_VERSION}
+PERL_LIB_ROOT=/usr/local/cpanel/3rdparty/perl/${PERL_MAJOR_VERSION}/lib/perl5
+
+####################################
 
 rpm -qf /etc/redhat-release
-
-#time=$(date)
-#echo ::set-output name=time::$time
-
-echo "Runing from: "
+echo -n "# Runing from: "
 pwd
 
-tar xvzf v5.30.0.tar.gz
-cd perl5-5.30.0
+echo "."
+echo "*********************************"
+echo "** Cloning Perl Git Repository"
+echo "*********************************"
+
+
+git clone https://github.com/Perl/perl5.git
+cd perl5
+git checkout $PERL_TAG
 
 echo "."
 echo "*********************************"
@@ -20,13 +38,8 @@ echo "** Applying custom patches"
 echo "*********************************"
 
 for p in $(ls ../patches/*.patch); do 
-	patch -p3 -i $p && touch $p.done
+	patch -p3 -i $p && ( echo "# Applied patch $p"; touch $p.done )
 done
-
-export PERL_VERSION=5.30.0
-export PERL_MAJOR_VERSION=530
-export PREFIX=/usr/local/cpanel/3rdparty/perl/${PERL_MAJOR_VERSION}
-export PERL_LIB_ROOT=/usr/local/cpanel/3rdparty/perl/${PERL_MAJOR_VERSION}/lib/perl5
 
 echo "."
 echo "*********************************"
