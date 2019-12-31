@@ -7,8 +7,7 @@ ADD . /build-perl/
 WORKDIR /build-perl
 
 #RUN yum install -y git
-RUN yum install -y make gcc patch less which
-#RUN find .
+RUN yum install -y make gcc patch less which libidn libidn-devel openssl openssl-devel expat expat-devel
 
 VOLUME [ "/build-perl" ]
 
