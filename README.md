@@ -7,7 +7,7 @@ The goal is to provide a docker container to speedup the [Perl Compiler](https:/
 
 You can view the [last testsuite run here](https://github.com/atoomic/perl-compiler/actions).
 
-The docker containers are available from the public docker hub [at00mic/perl-compiler](https://hub.docker.com/repository/docker/at00mic/perl-compiler/general).
+The docker containers are available from the public docker hub [cpanelos/perl-compiler](https://hub.docker.com/repository/docker/cpanelos/perl-compiler/general).
 
 ## Tips & Tricks
 
@@ -23,12 +23,12 @@ You can trigger a manual build locally using:
 ### Testing a container
 
 You can test locally the container by overriding the entrypoint then bash to it.
-Adjust the tag `at00mic/perl-compiler:perl-v5.30.0` to point to any other flavor you want.
-(for example `at00mic/perl-compiler:latest`)
+Adjust the tag `cpanelos/perl-compiler:perl-v5.30.0` to point to any other flavor you want.
+(for example `cpanelos/perl-compiler:latest`)
 
-    docker pull at00mic/perl-compiler:perl-v5.30.0
+    docker pull cpanelos/perl-compiler:perl-v5.30.0
     docker rm -f mytest
-    docker run --name mytest  --entrypoint "/bin/bash" -it -d at00mic/perl-compiler:perl-v5.30.0
+    docker run --name mytest  --entrypoint "/bin/bash" -it -d cpanelos/perl-compiler:perl-v5.30.0
 
     docker ps -a
     docker exec -it mytest bash
