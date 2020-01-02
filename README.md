@@ -3,9 +3,9 @@
 ## Sumary
 
 Docker container recipes to build Perl with a few extra patches required by the Perl Compiler.
-The goal is to provide a docker container to speedup the [Perl Compiler](https://github.com/atoomic/perl-compiler) testsuite.
+The goal is to provide a docker container to speedup the [Perl Compiler](https://github.com/cpanel/perl-compiler) testsuite.
 
-You can view the [last testsuite run here](https://github.com/atoomic/perl-compiler/actions).
+You can view the [last testsuite run here](https://github.com/cpanel/perl-compiler/actions).
 
 The docker containers are available from the public docker hub [cpanelos/perl-compiler](https://hub.docker.com/repository/docker/cpanelos/perl-compiler/general).
 
