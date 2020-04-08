@@ -29,7 +29,7 @@ requires 'Moo'               => '0';
 requires 'Ref::Util'     => '0';
 requires 'Ref::Util::XS' => '0';
 
-requires 'CBOR::Free'      => '0.22';
+requires 'CBOR::Free'      => '0.23';
 requires 'Sereal'          => '4.011';
 requires 'Sereal::Decoder' => '4.011';
 requires 'Sereal::Encoder' => '4.011';
