@@ -12,8 +12,8 @@ echo "*********************************"
 
 WORKDIR="$(pwd)"
 
-PERL_VERSION=5.30.0
-PERL_MAJOR_VERSION=530
+PERL_VERSION=5.32.0
+PERL_MAJOR_VERSION=532
 PERL_TAG=v${PERL_VERSION}
 
 PERL_NAME=cpanel
