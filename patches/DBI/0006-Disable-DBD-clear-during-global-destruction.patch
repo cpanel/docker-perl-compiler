@@ -1,0 +1,38 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Nicolas Rochelemagne <rochelemagne@cpanel.net>
+Date: Thu, 28 Sep 2017 15:47:16 -0500
+Subject: [PATCH 6/6] Disable DBD clear during global destruction
+
+When using B::C, we can trigger a known bug
+during global destruction which lead to clearing
+a DBH handler twice.
+
+* example error:
+dbih_clearcom: DBI handle already cleared (dbh 0x71cc660, com 0x71e3bc0, imp global destruction):
+    FLAGS 0x588398: Warn HandleError RaiseError PrintError PrintWarn AutoCommit
+    PARENT '*DBD::mysql::dr::DESTROY'
+    KIDS 0 (0 Active)
+
+References: CPANEL-16140
+---
+ modules/DBI/DBI/DBI.pm | 7 +++++++
+ 1 file changed, 7 insertions(+)
+
+diff --git a/modules/DBI/DBI/DBI.pm b/modules/DBI/DBI/DBI.pm
+index fd47387f7c..c1d55e1551 100644
+--- a/modules/DBI/DBI/DBI.pm
++++ b/modules/DBI/DBI/DBI.pm
+@@ -555,6 +555,13 @@ END {
+     DBI->disconnect_all() if %DBI::installed_drh;
+ }
+ 
++END {
++    # disable it during global destruction - B::C issue
++    { @DBD::_mem::dr::ISA = (); *DBD::_mem::dr::DESTROY = sub {} }
++    { @DBD::_mem::db::ISA = (); *DBD::_mem::db::DESTROY = sub {} }
++    { @DBD::_mem::st::ISA = (); *DBD::_mem::st::DESTROY = sub {} }
++    undef %DBD::_mem::common::;
++}
+ 
+ sub CLONE {
+     _clone_dbis() unless $DBI::PurePerl; # clone the DBIS structure

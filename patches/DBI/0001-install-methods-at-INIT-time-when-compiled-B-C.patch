@@ -1,0 +1,42 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Nicolas Rochelemagne <rochelemagne@cpanel.net>
+Date: Thu, 3 Dec 2015 16:35:00 -0600
+Subject: [PATCH 1/6] install methods at INIT time when compiled - B::C
+
+Upstream-BUG: Google: issue 359
+Upstream-BUG: Github: issue 344
+---
+ modules/DBI/DBI/DBI.pm | 13 +++++++++++++
+ 1 file changed, 13 insertions(+)
+
+diff --git a/modules/DBI/DBI/DBI.pm b/modules/DBI/DBI/DBI.pm
+index d62a32dd06..23b16f2f53 100644
+--- a/modules/DBI/DBI/DBI.pm
++++ b/modules/DBI/DBI/DBI.pm
+@@ -506,6 +506,9 @@ my $keeperr = { O=>0x0004 };
+     },
+ );
+ 
++# wrap the code in a sub
++sub init_install_method {
++
+ while ( my ($class, $meths) = each %DBI::DBI_methods ) {
+     my $ima_trace = 0+($ENV{DBI_IMA_TRACE}||0);
+     while ( my ($method, $info) = each %$meths ) {
+@@ -520,6 +523,16 @@ while ( my ($class, $meths) = each %DBI::DBI_methods ) {
+     }
+ }
+ 
++} # end sub init_install_method
++
++# install methods at INIT time when compiled
++# view https://code.google.com/p/perl-compiler/issues/detail?id=359
++# or https://github.com/rurban/perl-compiler/issues/344
++init_install_method();
++if ( !${^GLOBAL_PHASE} || ${^GLOBAL_PHASE} eq 'START' ) {
++    eval q/INIT { init_install_method() }/;
++}
++
+ {
+     package DBI::common;
+     @DBI::dr::ISA = ('DBI::common');

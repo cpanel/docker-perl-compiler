@@ -1,0 +1,27 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Nicolas Rochelemagne <rochelemagne@cpanel.net>
+Date: Fri, 18 Dec 2015 13:58:44 -0600
+Subject: [PATCH 2/6] improve B::C fix for DBI
+
+---
+ modules/DBI/DBI/DBI.pm | 6 +++++-
+ 1 file changed, 5 insertions(+), 1 deletion(-)
+
+diff --git a/modules/DBI/DBI/DBI.pm b/modules/DBI/DBI/DBI.pm
+index 23b16f2f53..908a7da250 100644
+--- a/modules/DBI/DBI/DBI.pm
++++ b/modules/DBI/DBI/DBI.pm
+@@ -507,8 +507,12 @@ my $keeperr = { O=>0x0004 };
+ );
+ 
+ # wrap the code in a sub
++my $_init_lock;
+ sub init_install_method {
+-
++    my $current_lock = $$ . '.' . join('.', ( stat( $INC{"DBI.pm"} )) [0, 1, 9] );
++    return if defined $_init_lock && $_init_lock eq $current_lock && ! exists $INC{"Cpanel/BinCheck.pm"};
++    no warnings 'redefine';
++    $_init_lock = $current_lock;
+ while ( my ($class, $meths) = each %DBI::DBI_methods ) {
+     my $ima_trace = 0+($ENV{DBI_IMA_TRACE}||0);
+     while ( my ($method, $info) = each %$meths ) {

@@ -1,0 +1,27 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Nicolas Rochelemagne <rochelemagne@cpanel.net>
+Date: Thu, 15 Sep 2016 14:31:39 -0600
+Subject: [PATCH 4/6] Disable copy_statement_to_parent in set_err_sv
+
+DBI::err can be undefined when connection fails with an HandleError
+
+References: BC-192
+URL: https://github.com/perl5-dbi/dbi/issues/36
+---
+ modules/DBI/DBI/DBI.xs | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/modules/DBI/DBI/DBI.xs b/modules/DBI/DBI/DBI.xs
+index 159b5c9ce9..89bc5fee45 100644
+--- a/modules/DBI/DBI/DBI.xs
++++ b/modules/DBI/DBI/DBI.xs
+@@ -839,7 +839,8 @@ set_err_sv(SV *h, imp_xxh_t *imp_xxh, SV *err, SV *errstr, SV *state, SV *method
+ 
+         /* ensure that the parent's Statement attribute reflects the latest error */
+         /* so that ShowErrorStatement is reliable */
+-        copy_statement_to_parent(aTHX_ h, imp_xxh);
++        // Temporary disabled due to https://github.com/perl5-dbi/dbi/issues/36
++        //copy_statement_to_parent(aTHX_ h, imp_xxh);
+     }
+ 
+     return 1;

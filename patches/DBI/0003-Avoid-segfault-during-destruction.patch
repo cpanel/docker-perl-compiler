@@ -1,0 +1,39 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Nicolas Rochelemagne <rochelemagne@cpanel.net>
+Date: Fri, 18 Mar 2016 11:40:11 -0500
+Subject: [PATCH 3/6] Avoid segfault during destruction
+
+---
+ modules/DBI/DBI/DBI.xs | 9 ++++++---
+ 1 file changed, 6 insertions(+), 3 deletions(-)
+
+diff --git a/modules/DBI/DBI/DBI.xs b/modules/DBI/DBI/DBI.xs
+index 2cea4ace45..159b5c9ce9 100644
+--- a/modules/DBI/DBI/DBI.xs
++++ b/modules/DBI/DBI/DBI.xs
+@@ -3465,9 +3465,10 @@ XS(XS_DBI_dispatch)
+             I32 kidslots;
+             PerlIO *logfp = DBILOGFP;
+ 
+-            for (kidslots = AvFILL(av); kidslots >= 0; --kidslots) {
++            if (!SvIS_FREED(av)) {
++              for (kidslots = AvFILL(av); kidslots >= 0; --kidslots) {
+                 SV **hp = av_fetch(av, kidslots, FALSE);
+-                if (!hp || !SvROK(*hp) || SvTYPE(SvRV(*hp))!=SVt_PVHV)
++                if (SvIS_FREED(av) || !hp || !SvROK(*hp) || SvTYPE(SvRV(*hp))!=SVt_PVHV)
+                     break;
+ 
+                 if (trace_level >= 1) {
+@@ -3487,9 +3488,11 @@ XS(XS_DBI_dispatch)
+                     imp_xxh_t *imp_xxh = dbih_getcom2(aTHX_ *hp, 0);
+                     if (imp_xxh && DBIc_COMSET(imp_xxh)) {
+                         dbih_clearcom(imp_xxh);
+-                        sv_setsv(*hp, &PL_sv_undef);
++                        if ( ! SvIS_FREED(av) ) /* dbih_clearcom can clear the av */
++                            sv_setsv(*hp, &PL_sv_undef);
+                     }
+                 }
++              }
+             }
+         }
+ 

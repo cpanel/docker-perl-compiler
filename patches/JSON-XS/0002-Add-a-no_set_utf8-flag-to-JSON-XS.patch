@@ -1,0 +1,84 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: "J. Nick Koston" <nick@cpanel.net>
+Date: Wed, 28 Oct 2015 03:56:48 -0500
+Subject: [PATCH 2/3] Add a no_set_utf8 flag to JSON::XS
+
+case CPANEL-2195
+
+  When we send JSON data that we have read from an external
+  source down a pipe, we have a bytes string that does not
+  have the UTF-8 flag set.  In order to get the data back in the
+  same state between processes, we need to read the data in
+  from the file handle with UTF-8 encoding and NOT set the UTF-8 flag.
+
+  The new 'no_set_utf8' flag provides a way to do this.
+---
+ modules/JSON-XS/JSON-XS/XS.pm | 17 +++++++++++++++++
+ modules/JSON-XS/JSON-XS/XS.xs |  5 ++++-
+ 2 files changed, 21 insertions(+), 1 deletion(-)
+
+diff --git a/modules/JSON-XS/JSON-XS/XS.pm b/modules/JSON-XS/JSON-XS/XS.pm
+index 43384d81bb..bbc6ce7f46 100644
+--- a/modules/JSON-XS/JSON-XS/XS.pm
++++ b/modules/JSON-XS/JSON-XS/XS.pm
+@@ -299,6 +299,23 @@ Example, pretty-print some simple structure:
+       ]
+    }
+ 
++=item $json = $json->no_set_utf8 ([$enable])
++
++=item $enabled = $json->no_set_utf8
++
++If C<$enable> is true (or missing), then the C<decode> method will never
++call SvUTF8_on.  This is only useful when you want to get your decoded
++JSON data back as a bytes string.
++
++When we send JSON data that we have read from an external
++source from a pipe, we have a bytes string that does not
++have the UTF-8 flag set.  Sometimes we need to pass that data
++to another process.  In order to get the data back in the
++same state between processes, we need to read the data in
++from the file handle with UTF-8 encoding and NOT set the UTF-8 flag.
++
++The 'no_set_utf8' flag provides a way to do this.
++
+ =item $json = $json->indent ([$enable])
+ 
+ =item $enabled = $json->get_indent
+diff --git a/modules/JSON-XS/JSON-XS/XS.xs b/modules/JSON-XS/JSON-XS/XS.xs
+index 43c3052436..8c297d66b7 100644
+--- a/modules/JSON-XS/JSON-XS/XS.xs
++++ b/modules/JSON-XS/JSON-XS/XS.xs
+@@ -49,6 +49,7 @@
+ #define F_ALLOW_UNKNOWN  0x00002000UL
+ #define F_ALLOW_TAGS     0x00004000UL
+ #define F_HOOK           0x00080000UL // some hooks exist, so slow-path processing
++#define F_NO_SET_UTF8    0x40000000UL // do not set SvUTF8_on AKA http://search.cpan.org/~bkb/JSON-Parse-0.36/lib/JSON/Parse.pod#Handling_of_Unicode
+ 
+ #define F_PRETTY    F_INDENT | F_SPACE_BEFORE | F_SPACE_AFTER
+ 
+@@ -1225,7 +1226,7 @@ decode_str (dec_t *dec)
+       SvPOK_only (sv);
+       *SvEND (sv) = 0;
+ 
+-      if (utf8)
++      if (utf8 && !(dec->json.flags & F_NO_SET_UTF8))
+         SvUTF8_on (sv);
+     }
+   else
+@@ -2120,6 +2121,7 @@ void ascii (JSON *self, int enable = 1)
+         ascii           = F_ASCII
+         latin1          = F_LATIN1
+         utf8            = F_UTF8
++        no_set_utf8     = F_NO_SET_UTF8
+         indent          = F_INDENT
+         canonical       = F_CANONICAL
+         space_before    = F_SPACE_BEFORE
+@@ -2147,6 +2149,7 @@ void get_ascii (JSON *self)
+         get_ascii           = F_ASCII
+         get_latin1          = F_LATIN1
+         get_utf8            = F_UTF8
++        get_no_set_utf8     = F_NO_SET_UTF8
+         get_indent          = F_INDENT
+         get_canonical       = F_CANONICAL
+         get_space_before    = F_SPACE_BEFORE

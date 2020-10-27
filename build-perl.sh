@@ -148,6 +148,45 @@ perl Makefile.PL
 make
 make install
 
+echo -e "\n------------------------------------\n"
+
+echo "** DBI"
+cd ${WORKDIR}
+wget https://github.com/perl5-dbi/dbi/archive/1.643.tar.gz
+tar xvzf 1.643.tar.gz
+cd dbi-1.643
+
+for p in $(ls ${WORKDIR}/patches/DBI/*.patch); do 
+    patch -p4 -i $p && ( echo "# Applied patch $p"; touch $p.done )
+done
+
+perl Makefile.PL
+make
+make install
+
+echo -e "\n------------------------------------\n"
+
+echo "** JSON-XS"
+cd ${WORKDIR}
+wget https://cpan.metacpan.org/authors/id/M/ML/MLEHMANN/JSON-XS-3.04.tar.gz
+tar xvzf JSON-XS-3.04.tar.gz
+cd JSON-XS-3.04
+
+for p in $(ls ${WORKDIR}/patches/JSON-XS/*.patch); do 
+    patch -p4 -i $p && ( echo "# Applied patch $p"; touch $p.done )
+done
+
+perl Makefile.PL
+make
+make install
+
+echo -e "\n------------------------------------\n"
+
+# sanity check
+perl -MClass::XSAccessor -E 'package Class::XSAccessor; say __PACKAGE__, " ", $VERSION'
+perl -MDBI -E 'package DBI; say __PACKAGE__, " ", $VERSION'
+perl -MJSON::XS -E 'package JSON::XS; say __PACKAGE__, " ", $VERSION'
+
 echo "."
 echo "*********************************"
 echo "** Done"

@@ -1,0 +1,50 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: "J. Nick Koston" <nick@cpanel.net>
+Date: Sun, 24 Sep 2017 21:38:03 -0500
+Subject: [PATCH 3/3] use INLINE instead of static
+
+case CPANEL-16022
+---
+ modules/JSON-XS/JSON-XS/XS.xs | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/modules/JSON-XS/JSON-XS/XS.xs b/modules/JSON-XS/JSON-XS/XS.xs
+index 8c297d66b7..9fac4fcb03 100644
+--- a/modules/JSON-XS/JSON-XS/XS.xs
++++ b/modules/JSON-XS/JSON-XS/XS.xs
+@@ -564,7 +564,7 @@ encode_comma (enc_t *enc)
+     encode_space (enc);
+ }
+ 
+-static void encode_sv (enc_t *enc, SV *sv);
++INLINE void encode_sv (enc_t *enc, SV *sv);
+ 
+ static void
+ encode_av (enc_t *enc, AV *av)
+@@ -891,7 +891,7 @@ encode_rv (enc_t *enc, SV *sv)
+            SvPV_nolen (sv_2mortal (newRV_inc (sv))));
+ }
+ 
+-static void
++INLINE void
+ encode_sv (enc_t *enc, SV *sv)
+ {
+   SvGETMAGIC (sv);
+@@ -1057,7 +1057,7 @@ decode_ws (dec_t *dec)
+ #define DEC_INC_DEPTH if (++dec->depth > dec->json.max_depth) ERR (ERR_NESTING_EXCEEDED)
+ #define DEC_DEC_DEPTH --dec->depth
+ 
+-static SV *decode_sv (dec_t *dec);
++INLINE SV *decode_sv (dec_t *dec);
+ 
+ static signed char decode_hexdigit[256];
+ 
+@@ -1668,7 +1668,7 @@ fail:
+   return 0;
+ }
+ 
+-static SV *
++INLINE SV *
+ decode_sv (dec_t *dec)
+ {
+   // the beauty of JSON: you need exactly one character lookahead

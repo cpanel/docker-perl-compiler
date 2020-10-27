@@ -14,12 +14,12 @@ requires 'Template::Toolkit' => '0';
 
 requires 'Class::Accessor'   => '0';
 requires 'DBD::SQLite'       => '0';
-requires 'DBI'               => '0';
+
 requires 'EV'                => '0';
 requires 'IO::Scalar'        => '0';
 requires 'IO::Socket::INET6' => '0';
 requires 'IO::Socket::SSL'   => '0';
-requires 'JSON::XS'          => '0';
+
 requires 'Moose'             => '0';
 requires 'Net::DNS'          => '0';
 requires 'Net::LibIDN'       => '0';
@@ -33,6 +33,10 @@ requires 'CBOR::Free'      => '0.31';
 requires 'Sereal'          => '4.018';
 requires 'Sereal::Decoder' => '4.018';
 requires 'Sereal::Encoder' => '4.018';
+
+# patch & customized modules (installed for dependencies, then replaced)
+requires 'DBI'               => '0';
+requires 'JSON::XS'          => '3.04';
 
 ## need to wait for 1.20 release
 #requires 'Class::XSAccessor' => '1.20';
