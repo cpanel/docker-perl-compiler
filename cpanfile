@@ -29,10 +29,10 @@ requires 'Moo'               => '0';
 requires 'Ref::Util'     => '0';
 requires 'Ref::Util::XS' => '0';
 
-requires 'CBOR::Free'      => '0.23';
-requires 'Sereal'          => '4.011';
-requires 'Sereal::Decoder' => '4.011';
-requires 'Sereal::Encoder' => '4.011';
+requires 'CBOR::Free'      => '0.31';
+requires 'Sereal'          => '4.018';
+requires 'Sereal::Decoder' => '4.018';
+requires 'Sereal::Encoder' => '4.018';
 
 ## need to wait for 1.20 release
 #requires 'Class::XSAccessor' => '1.20';
