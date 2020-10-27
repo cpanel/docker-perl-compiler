@@ -1,7 +1,7 @@
 From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Nicolas Rochelemagne <rochelemagne@cpanel.net>
 Date: Wed, 5 Jul 2017 12:29:41 -0600
-Subject: [PATCH 14/30] BC Static shared memory for single malloc
+Subject: [PATCH] BC Static shared memory for single malloc
 
 do not update these files, use make regen_headers
 - embed.h
@@ -19,23 +19,23 @@ do not update these files, use make regen_headers
  8 files changed, 108 insertions(+), 1 deletion(-)
 
 diff --git a/SOURCES/perl/embed.fnc b/SOURCES/perl/embed.fnc
-index a441ec65..226b57f2 100644
+index da0a935d..ddd1828f 100644
 --- a/SOURCES/perl/embed.fnc
 +++ b/SOURCES/perl/embed.fnc
-@@ -1983,6 +1983,7 @@ Ap	|int	|get_mstats	|NN perl_mstats_t *buf|int buflen|int level
- Anpa	|Malloc_t|safesysmalloc	|MEM_SIZE nbytes
- Anpa	|Malloc_t|safesyscalloc	|MEM_SIZE elements|MEM_SIZE size
- AnpR	|Malloc_t|safesysrealloc|Malloc_t where|MEM_SIZE nbytes
+@@ -2546,6 +2546,7 @@ Ap	|int	|get_mstats	|NN perl_mstats_t *buf|int buflen|int level
+ ATpa	|Malloc_t|safesysmalloc	|MEM_SIZE nbytes
+ ATpa	|Malloc_t|safesyscalloc	|MEM_SIZE elements|MEM_SIZE size
+ ATpR	|Malloc_t|safesysrealloc|Malloc_t where|MEM_SIZE nbytes
 +Anpa    |Malloc_t|bc_safesysrealloc|Malloc_t where|MEM_SIZE nbytes
- Anp    |void    |DeclareStaticMemory|Malloc_t from|Malloc_t to|MEM_SIZE size
- Anp	|Free_t	|safesysfree	|Malloc_t where
- Asrnx	|void	|croak_memory_wrap
+ Anp     |void    |DeclareStaticMemory|Malloc_t from|Malloc_t to|MEM_SIZE size
+ ATp	|Free_t	|safesysfree	|Malloc_t where
+ CrTp	|void	|croak_memory_wrap
 diff --git a/SOURCES/perl/embed.h b/SOURCES/perl/embed.h
-index d6c43452..5bb54e49 100644
+index 80c394e1..45eef988 100644
 --- a/SOURCES/perl/embed.h
 +++ b/SOURCES/perl/embed.h
-@@ -68,6 +68,7 @@
- #define av_top_index(a)		S_av_top_index(aTHX_ a)
+@@ -63,6 +63,7 @@
+ #define av_top_index(a)		Perl_av_top_index(aTHX_ a)
  #define av_undef(a)		Perl_av_undef(aTHX_ a)
  #define av_unshift(a,b)		Perl_av_unshift(aTHX_ a,b)
 +#define bc_safesysrealloc	Perl_bc_safesysrealloc
@@ -43,10 +43,10 @@ index d6c43452..5bb54e49 100644
  #define block_gimme()		Perl_block_gimme(aTHX)
  #define block_start(a)		Perl_block_start(aTHX_ a)
 diff --git a/SOURCES/perl/embedvar.h b/SOURCES/perl/embedvar.h
-index 2a709d25..a554ffed 100644
+index 2ee1b8a6..140963a2 100644
 --- a/SOURCES/perl/embedvar.h
 +++ b/SOURCES/perl/embedvar.h
-@@ -298,6 +298,8 @@
+@@ -313,6 +313,8 @@
  #define PL_static_memory_buffer (vTHX->Istatic_memory_buffer)
  #define PL_static_memory_from   (vTHX->Istatic_memory_from)
  #define PL_static_memory_to     (vTHX->Istatic_memory_to)
@@ -56,10 +56,10 @@ index 2a709d25..a554ffed 100644
  #define PL_statusvalue		(vTHX->Istatusvalue)
  #define PL_statusvalue_posix	(vTHX->Istatusvalue_posix)
 diff --git a/SOURCES/perl/intrpvar.h b/SOURCES/perl/intrpvar.h
-index c4b33bba..3395340e 100644
+index a4a6a969..4d39caed 100644
 --- a/SOURCES/perl/intrpvar.h
 +++ b/SOURCES/perl/intrpvar.h
-@@ -820,6 +820,14 @@ PERLVARI(I, static_memory_from,        Malloc_t,       0)      /* first memory a
+@@ -955,6 +955,14 @@ PERLVARI(I, static_memory_from,        Malloc_t,       0)      /* first memory a
  PERLVARI(I, static_memory_to,  Malloc_t,       0)      /* last memory address where we have declared a usage of static memory */
  PERLVARI(I, static_memory_buffer, STATIC_MEMORY_AREA *, NULL)   /* buffer storage (linked list for now) */
  
@@ -75,10 +75,10 @@ index c4b33bba..3395340e 100644
   * above on where there are gaps which currently will be structure padding.  */
  
 diff --git a/SOURCES/perl/perl.h b/SOURCES/perl/perl.h
-index e5a55850..35515ffb 100644
+index 08d5e786..bfc6c16a 100644
 --- a/SOURCES/perl/perl.h
 +++ b/SOURCES/perl/perl.h
-@@ -1138,7 +1138,7 @@ EXTERN_C int usleep(unsigned int);
+@@ -1267,7 +1267,7 @@ EXTERN_C int usleep(unsigned int);
  #else  /* MYMALLOC */
  #  define safemalloc  safesysmalloc
  #  define safecalloc  safesyscalloc
@@ -88,18 +88,18 @@ index e5a55850..35515ffb 100644
  #  define CHECK_MALLOC_TOO_LATE_FOR(ch)		((void)0)
  #  define CHECK_MALLOC_TAINT(newval)		((void)0)
 diff --git a/SOURCES/perl/proto.h b/SOURCES/perl/proto.h
-index efaa8966..b9b65a33 100644
+index 55354869..51f1870f 100644
 --- a/SOURCES/perl/proto.h
 +++ b/SOURCES/perl/proto.h
-@@ -24,6 +24,7 @@ PERL_CALLCONV UV	ASCII_TO_NEED(const UV enc, const UV ch)
- 			__attribute__pure__;
+@@ -35,6 +35,7 @@ PERL_STATIC_INLINE GV *	Perl_CvGV(pTHX_ CV *sv);
+ #define PERL_ARGS_ASSERT_CVGV	\
+ 	assert(sv)
  #endif
- 
-+PERL_CALLCONV void     Perl_DeclareSharedMemoryUsage(Malloc_t where, MEM_SIZE size);
++PERL_CALLCONV void  Perl_DeclareSharedMemoryUsage(Malloc_t where, MEM_SIZE size);
  PERL_CALLCONV void  Perl_DeclareStaticMemory(Malloc_t from, Malloc_t to, MEM_SIZE size);
  PERL_CALLCONV int	Perl_Gv_AMupdate(pTHX_ HV* stash, bool destructing);
  #define PERL_ARGS_ASSERT_GV_AMUPDATE	\
-@@ -260,6 +261,10 @@ PERL_CALLCONV void	Perl_av_undef(pTHX_ AV *av);
+@@ -298,6 +299,10 @@ PERL_CALLCONV void	Perl_av_undef(pTHX_ AV *av);
  PERL_CALLCONV void	Perl_av_unshift(pTHX_ AV *av, SSize_t num);
  #define PERL_ARGS_ASSERT_AV_UNSHIFT	\
  	assert(av)
@@ -124,7 +124,7 @@ index b4d438f5..4fe5d60c 100644
    skip_all( "- regen.pl needs porting." );
  }
 diff --git a/SOURCES/perl/util.c b/SOURCES/perl/util.c
-index ec4297f9..68e76291 100644
+index 504f78a1..be643e38 100644
 --- a/SOURCES/perl/util.c
 +++ b/SOURCES/perl/util.c
 @@ -207,6 +207,94 @@ Perl_safesysmalloc(MEM_SIZE size)

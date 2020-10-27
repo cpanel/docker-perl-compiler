@@ -1,7 +1,7 @@
 From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Nicolas Rochelemagne <rochelemagne@cpanel.net>
 Date: Fri, 28 Sep 2018 11:43:07 -0500
-Subject: [PATCH 25/30] Reduce startup size of PL_strtab
+Subject: [PATCH] Reduce startup size of PL_strtab
 
 Perl 5.26 was using 512 as the default HvMAX for PL_strtab
 this was increased in 528 to 2048, but we can start with
@@ -16,10 +16,10 @@ Changelog:
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/SOURCES/perl/perl.c b/SOURCES/perl/perl.c
-index d45b675c..9caa3e9d 100644
+index f42c8096..d26a4c93 100644
 --- a/SOURCES/perl/perl.c
 +++ b/SOURCES/perl/perl.c
-@@ -385,7 +385,7 @@ perl_construct(pTHXx)
+@@ -370,7 +370,7 @@ perl_construct(pTHXx)
          /* SHAREKEYS tells us that the hash has its keys shared with PL_strtab,
           * which is not the case with PL_strtab itself */
          HvSHAREKEYS_off(PL_strtab);			/* mandatory */

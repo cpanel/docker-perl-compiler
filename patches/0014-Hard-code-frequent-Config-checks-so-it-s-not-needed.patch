@@ -1,14 +1,14 @@
 From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Todd Rinaldo <toddr@cpan.org>
 Date: Mon, 18 Sep 2017 19:39:38 -0500
-Subject: [PATCH 15/30] Hard code frequent Config checks so it's not needed
+Subject: [PATCH] Hard code frequent Config checks so it's not needed
 
 ---
  SOURCES/perl/cpan/Tie-RefHash/lib/Tie/RefHash.pm | 3 +--
- SOURCES/perl/cpan/autodie/lib/Fatal.pm           | 5 +++--
+ SOURCES/perl/cpan/autodie/lib/Fatal.pm           | 4 ++--
  SOURCES/perl/dist/PathTools/Cwd.pm               | 2 +-
  SOURCES/perl/lib/File/Copy.pm                    | 5 ++---
- 4 files changed, 7 insertions(+), 8 deletions(-)
+ 4 files changed, 6 insertions(+), 8 deletions(-)
 
 diff --git a/SOURCES/perl/cpan/Tie-RefHash/lib/Tie/RefHash.pm b/SOURCES/perl/cpan/Tie-RefHash/lib/Tie/RefHash.pm
 index ed72abc9..4adbe6d4 100644
@@ -25,19 +25,18 @@ index ed72abc9..4adbe6d4 100644
    *_HAS_SCALAR_UTIL = eval { require Scalar::Util; 1 } ? sub () { 1 } : sub () { 0 };
    *_HAS_WEAKEN = defined(&Scalar::Util::weaken) ? sub () { 1 } : sub () { 0 };
 diff --git a/SOURCES/perl/cpan/autodie/lib/Fatal.pm b/SOURCES/perl/cpan/autodie/lib/Fatal.pm
-index 16e17434..434452a4 100644
+index 09abfb85..6e30e4f6 100644
 --- a/SOURCES/perl/cpan/autodie/lib/Fatal.pm
 +++ b/SOURCES/perl/cpan/autodie/lib/Fatal.pm
-@@ -7,7 +7,7 @@ use Carp;
+@@ -7,7 +7,6 @@ use Carp;
  use strict;
  use warnings;
  use Tie::RefHash;   # To cache subroutine refs
 -use Config;
-+
- use Scalar::Util qw(set_prototype);
+ use Scalar::Util qw(set_prototype looks_like_number);
  
  use autodie::Util qw(
-@@ -74,7 +74,8 @@ $Carp::CarpInternal{'autodie::exception'} = 1;
+@@ -74,7 +73,8 @@ $Carp::CarpInternal{'autodie::exception'} = 1;
  
  # the linux parisc port has separate EAGAIN and EWOULDBLOCK,
  # and the kernel returns EAGAIN

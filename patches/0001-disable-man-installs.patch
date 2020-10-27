@@ -1,7 +1,7 @@
 From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Todd Rinaldo <toddr@cpanel.net>
 Date: Tue, 16 Jun 2015 18:21:59 -0500
-Subject: [PATCH 01/30] disable man installs
+Subject: [PATCH] disable man installs
 
 disable perl from installing man during make install
 ---

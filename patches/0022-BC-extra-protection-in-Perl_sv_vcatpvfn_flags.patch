@@ -1,17 +1,17 @@
 From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Nicolas Rochelemagne <rochelemagne@cpanel.net>
 Date: Mon, 14 Aug 2017 11:02:32 -0600
-Subject: [PATCH 23/30] BC extra protection in Perl_sv_vcatpvfn_flags
+Subject: [PATCH] BC extra protection in Perl_sv_vcatpvfn_flags
 
 ---
  SOURCES/perl/sv.c | 4 +++-
  1 file changed, 3 insertions(+), 1 deletion(-)
 
 diff --git a/SOURCES/perl/sv.c b/SOURCES/perl/sv.c
-index d8a28f74..e5073ed3 100644
+index e6cba0d6..9d4413ff 100644
 --- a/SOURCES/perl/sv.c
 +++ b/SOURCES/perl/sv.c
-@@ -12420,9 +12420,11 @@ Perl_sv_vcatpvfn_flags(pTHX_ SV *const sv, const char *const pat, const STRLEN p
+@@ -12489,9 +12489,11 @@ Perl_sv_vcatpvfn_flags(pTHX_ SV *const sv, const char *const pat, const STRLEN p
                          has_precis = TRUE;
                      }
                      argsv = MUTABLE_SV(va_arg(*args, void*));

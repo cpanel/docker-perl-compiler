@@ -1,7 +1,7 @@
 From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Nicolas Rochelemagne <rochelemagne@cpanel.net>
 Date: Fri, 15 Feb 2019 18:51:46 -0600
-Subject: [PATCH 29/30] Avoid a warning from cpan when run with warnings
+Subject: [PATCH] Avoid a warning from cpan when run with warnings
 
 Case CPANEL-25679:
 ---

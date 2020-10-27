@@ -1,7 +1,7 @@
 From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: "J. Nick Koston" <nick@cpanel.net>
 Date: Sat, 4 Aug 2018 13:53:10 -0500
-Subject: [PATCH 21/30] Remove use vars from Digest::
+Subject: [PATCH] Remove use vars from Digest::
 
 case CPANEL-22113
 ---

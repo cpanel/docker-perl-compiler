@@ -1,27 +1,23 @@
 From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Nicolas Rochelemagne <rochelemagne@cpanel.net>
 Date: Sat, 10 Mar 2018 10:43:20 -0600
-Subject: [PATCH 16/30] Storable do not load Fcntl
+Subject: [PATCH] Storable do not load Fcntl
 
 Case CPANEL-19113:
 
 Patch Storable to mitigate issue with recent SEGV
 ---
- SOURCES/perl/dist/Storable/__Storable__.pm | 17 +++--------------
- 1 file changed, 3 insertions(+), 14 deletions(-)
+ SOURCES/perl/dist/Storable/Storable.pm | 13 +++----------
+ 1 file changed, 3 insertions(+), 10 deletions(-)
 
-diff --git a/SOURCES/perl/dist/Storable/__Storable__.pm b/SOURCES/perl/dist/Storable/__Storable__.pm
-index 92373712..83fc6be9 100644
---- a/SOURCES/perl/dist/Storable/__Storable__.pm
-+++ b/SOURCES/perl/dist/Storable/__Storable__.pm
-@@ -74,20 +74,9 @@ BEGIN {
-     }
- }
+diff --git a/SOURCES/perl/dist/Storable/Storable.pm b/SOURCES/perl/dist/Storable/Storable.pm
+index 1a750f1b..ccab8196 100644
+--- a/SOURCES/perl/dist/Storable/Storable.pm
++++ b/SOURCES/perl/dist/Storable/Storable.pm
+@@ -80,16 +80,9 @@ BEGIN {
+ # They might miss :flock in Fcntl
+ #
  
--#
--# They might miss :flock in Fcntl
--#
--
 -BEGIN {
 -    if (eval { require Fcntl; 1 } && exists $Fcntl::EXPORT_TAGS{'flock'}) {
 -        Fcntl->import(':flock');
@@ -32,7 +28,7 @@ index 92373712..83fc6be9 100644
 -	      };
 -    }
 -}
-+# avoid to load Fcntl
++# avoid to loading Fcntl
 +sub LOCK_SH () { 1 }
 +sub LOCK_EX () { 2 }
  

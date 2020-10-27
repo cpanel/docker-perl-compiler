@@ -1,7 +1,7 @@
 From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: "J. Nick Koston" <nick@cpanel.net>
 Date: Sun, 30 Apr 2017 17:21:16 -0500
-Subject: [PATCH 09/30] Avoid use vars when our will do in Core Perl
+Subject: [PATCH] Avoid use vars when our will do in Core Perl
 
 * MIME::Base64 changes submitted upstream via
 https://github.com/gisle/mime-base64/pull/5

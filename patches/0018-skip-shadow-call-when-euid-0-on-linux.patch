@@ -1,7 +1,7 @@
 From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Nicolas R <atoomic@cpan.org>
 Date: Mon, 16 Jul 2018 11:26:59 -0600
-Subject: [PATCH 19/30] skip shadow call when euid > 0 on linux
+Subject: [PATCH] skip shadow call when euid > 0 on linux
 
 maybe __linux__ is not restrictive enough
 and we could consider using a hint sh file
@@ -13,10 +13,10 @@ Upstream-URL: https://rt.perl.org/Ticket/Display.html?id=133388
  1 file changed, 3 insertions(+)
 
 diff --git a/SOURCES/perl/pp_sys.c b/SOURCES/perl/pp_sys.c
-index 304e1b50..39dc7883 100644
+index a431bbe3..e94893a6 100644
 --- a/SOURCES/perl/pp_sys.c
 +++ b/SOURCES/perl/pp_sys.c
-@@ -5510,6 +5510,9 @@ PP(pp_gpwent)
+@@ -5519,6 +5519,9 @@ PP(pp_gpwent)
  	/* Some AIX setups falsely(?) detect some getspnam(), which
  	 * has a different API than the Solaris/IRIX one. */
  #   if defined(HAS_GETSPNAM) && !defined(_AIX)

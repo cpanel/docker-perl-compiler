@@ -1,7 +1,7 @@
 From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Nicolas Rochelemagne <rochelemagne@cpanel.net>
 Date: Mon, 14 Nov 2016 05:52:48 -0600
-Subject: [PATCH 07/30] Use dup2 from Cpanel::POSIX::Tiny
+Subject: [PATCH] Use dup2 from Cpanel::POSIX::Tiny
 
 Do not call POSIX import from IO::Socket::IP.
 
@@ -19,10 +19,10 @@ and https://jira.cpanel.net/browse/CM-1191
  1 file changed, 4 insertions(+), 2 deletions(-)
 
 diff --git a/SOURCES/perl/cpan/IO-Socket-IP/lib/IO/Socket/IP.pm b/SOURCES/perl/cpan/IO-Socket-IP/lib/IO/Socket/IP.pm
-index ddecf428..d85bb97c 100644
+index 5a5ee7d2..4982160b 100644
 --- a/SOURCES/perl/cpan/IO-Socket-IP/lib/IO/Socket/IP.pm
 +++ b/SOURCES/perl/cpan/IO-Socket-IP/lib/IO/Socket/IP.pm
-@@ -28,7 +28,6 @@ use Socket 1.97 qw(
+@@ -30,7 +30,6 @@ use Socket 1.97 qw(
  );
  my $AF_INET6 = eval { Socket::AF_INET6() }; # may not be defined
  my $AI_ADDRCONFIG = eval { Socket::AI_ADDRCONFIG() } || 0;

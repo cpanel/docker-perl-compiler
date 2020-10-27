@@ -1,7 +1,7 @@
 From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: "J. Nick Koston" <nick@cpanel.net>
 Date: Sun, 1 Jul 2018 17:36:56 -0500
-Subject: [PATCH 18/30] Reduce Scalar::Utils regex overhead
+Subject: [PATCH] Reduce Scalar::Utils regex overhead
 
 case CPANEL-21503
 
@@ -11,7 +11,7 @@ https://cpanel.wiki/display/LD/Reducing+Binary+Startup+Time
  1 file changed, 2 insertions(+), 2 deletions(-)
 
 diff --git a/SOURCES/perl/cpan/Scalar-List-Utils/lib/Scalar/Util.pm b/SOURCES/perl/cpan/Scalar-List-Utils/lib/Scalar/Util.pm
-index 69821587..6e3fc4f5 100644
+index a7345aad..cfdc234f 100644
 --- a/SOURCES/perl/cpan/Scalar-List-Utils/lib/Scalar/Util.pm
 +++ b/SOURCES/perl/cpan/Scalar-List-Utils/lib/Scalar/Util.pm
 @@ -36,12 +36,12 @@ unless (defined &isvstring) {

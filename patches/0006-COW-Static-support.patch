@@ -1,7 +1,7 @@
 From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Todd Rinaldo <toddr@cpanel.net>
 Date: Tue, 20 Sep 2016 15:43:41 -0500
-Subject: [PATCH 06/30] COW Static support
+Subject: [PATCH] COW Static support
 
 Cow strings use a counter behind the final "\0",
 we are going to use its maximum value of 255
@@ -16,10 +16,10 @@ when a COW strings reach the 255 it will never decrease / increase.
  2 files changed, 20 insertions(+), 18 deletions(-)
 
 diff --git a/SOURCES/perl/sv.c b/SOURCES/perl/sv.c
-index a5f7da23..d8a28f74 100644
+index 9c7f3ba4..e6cba0d6 100644
 --- a/SOURCES/perl/sv.c
 +++ b/SOURCES/perl/sv.c
-@@ -4194,7 +4194,7 @@ static void
+@@ -4224,7 +4224,7 @@ static void
  S_sv_buf_to_rw(pTHX_ SV *sv)
  {
      struct perl_memory_debug_header * const header =
@@ -28,7 +28,7 @@ index a5f7da23..d8a28f74 100644
      const MEM_SIZE len = header->size;
      PERL_ARGS_ASSERT_SV_BUF_TO_RW;
      if (mprotect(header, len, PROT_READ|PROT_WRITE))
-@@ -4636,9 +4636,7 @@ Perl_sv_setsv_flags(pTHX_ SV *dstr, SV* sstr, const I32 flags)
+@@ -4666,9 +4666,7 @@ Perl_sv_setsv_flags(pTHX_ SV *dstr, SV* sstr, const I32 flags)
  		 (sflags & SVf_IsCOW
  		   ? (!len ||
                         (  (CHECK_COWBUF_THRESHOLD(cur,len) || SvLEN(dstr) < cur+1)
@@ -39,7 +39,7 @@ index a5f7da23..d8a28f74 100644
  		   : (  (sflags & CAN_COW_MASK) == CAN_COW_FLAGS
  		     && !(SvFLAGS(dstr) & SVf_BREAK)
                       && CHECK_COW_THRESHOLD(cur,len) && cur+1 < len
-@@ -4673,7 +4671,7 @@ Perl_sv_setsv_flags(pTHX_ SV *dstr, SV* sstr, const I32 flags)
+@@ -4703,7 +4701,7 @@ Perl_sv_setsv_flags(pTHX_ SV *dstr, SV* sstr, const I32 flags)
  		    if (sflags & SVf_IsCOW) {
  			sv_buf_to_rw(sstr);
  		    }
@@ -48,7 +48,7 @@ index a5f7da23..d8a28f74 100644
                      SvPV_set(dstr, SvPVX_mutable(sstr));
                      sv_buf_to_ro(sstr);
              } else
-@@ -4863,7 +4861,6 @@ Perl_sv_setsv_cow(pTHX_ SV *dstr, SV *sstr)
+@@ -4893,7 +4891,6 @@ Perl_sv_setsv_cow(pTHX_ SV *dstr, SV *sstr)
  	    goto common_exit;
  	}
  	assert(SvCUR(sstr)+1 < SvLEN(sstr));
@@ -56,7 +56,7 @@ index a5f7da23..d8a28f74 100644
      } else {
  	assert ((SvFLAGS(sstr) & CAN_COW_MASK) == CAN_COW_FLAGS);
  	SvUPGRADE(sstr, SVt_COW);
-@@ -4875,7 +4872,7 @@ Perl_sv_setsv_cow(pTHX_ SV *dstr, SV *sstr)
+@@ -4905,7 +4902,7 @@ Perl_sv_setsv_cow(pTHX_ SV *dstr, SV *sstr)
  #  ifdef PERL_DEBUG_READONLY_COW
      if (already) sv_buf_to_rw(sstr);
  #  endif
@@ -65,7 +65,7 @@ index a5f7da23..d8a28f74 100644
      new_pv = SvPVX_mutable(sstr);
      sv_buf_to_ro(sstr);
  
-@@ -5193,9 +5190,11 @@ S_sv_uncow(pTHX_ SV * const sv, const U32 flags)
+@@ -5229,9 +5226,11 @@ S_sv_uncow(pTHX_ SV * const sv, const U32 flags)
  	    {
  		U8 cowrefcnt = CowREFCNT(sv);
  		if(cowrefcnt != 0) {
@@ -80,7 +80,7 @@ index a5f7da23..d8a28f74 100644
  		    goto copy_over;
  		}
  	    }
-@@ -6764,9 +6763,9 @@ Perl_sv_clear(pTHX_ SV *const orig_sv)
+@@ -6803,9 +6802,9 @@ Perl_sv_clear(pTHX_ SV *const orig_sv)
  		}
  	    }
  #ifdef PERL_ANY_COW
@@ -93,7 +93,7 @@ index a5f7da23..d8a28f74 100644
  	    {
  		if (SvIsCOW(sv)) {
  #ifdef DEBUGGING
-@@ -6776,10 +6775,12 @@ Perl_sv_clear(pTHX_ SV *const orig_sv)
+@@ -6815,10 +6814,12 @@ Perl_sv_clear(pTHX_ SV *const orig_sv)
  		    }
  #endif
  		    if (SvLEN(sv)) {
@@ -111,10 +111,10 @@ index a5f7da23..d8a28f74 100644
  			}
  		    } else {
 diff --git a/SOURCES/perl/sv.h b/SOURCES/perl/sv.h
-index 3a648e49..068653e6 100644
+index 8c135668..67e28f8f 100644
 --- a/SOURCES/perl/sv.h
 +++ b/SOURCES/perl/sv.h
-@@ -1890,7 +1890,7 @@ Like C<sv_catsv> but doesn't process magic.
+@@ -1971,7 +1971,7 @@ Like C<sv_catsv> but doesn't process magic.
  #ifdef PERL_COPY_ON_WRITE
  #   define SvCANCOW(sv)					    \
  	(SvIsCOW(sv)					     \
@@ -123,7 +123,7 @@ index 3a648e49..068653e6 100644
  	 : (SvFLAGS(sv) & CAN_COW_MASK) == CAN_COW_FLAGS       \
  			    && SvCUR(sv)+1 < SvLEN(sv))
     /* Note: To allow 256 COW "copies", a refcnt of 0 means 1. */
-@@ -1898,6 +1898,7 @@ Like C<sv_catsv> but doesn't process magic.
+@@ -1979,6 +1979,7 @@ Like C<sv_catsv> but doesn't process magic.
  #   define SV_COW_REFCNT_MAX	((1 << sizeof(U8)*8) - 1)
  #   define CAN_COW_MASK	(SVf_POK|SVf_ROK|SVp_POK|SVf_FAKE| \
  			 SVf_OOK|SVf_BREAK|SVf_READONLY|SVf_PROTECT)

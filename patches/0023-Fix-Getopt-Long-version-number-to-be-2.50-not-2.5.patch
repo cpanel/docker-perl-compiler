@@ -1,38 +1,37 @@
 From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Todd Rinaldo <toddr@cpan.org>
 Date: Thu, 6 Sep 2018 23:09:02 -0500
-Subject: [PATCH 24/30] Fix Getopt::Long version number to be 2.50 not 2.5
+Subject: [PATCH] Fix Getopt::Long version number to be 2.50 not 2.5
 
 Get rid of use vars and replace with our.
 ---
- .../perl/cpan/Getopt-Long/lib/Getopt/Long.pm  | 34 +++++++++----------
- 1 file changed, 16 insertions(+), 18 deletions(-)
+ .../perl/cpan/Getopt-Long/lib/Getopt/Long.pm  | 33 +++++++++----------
+ 1 file changed, 15 insertions(+), 18 deletions(-)
 
 diff --git a/SOURCES/perl/cpan/Getopt-Long/lib/Getopt/Long.pm b/SOURCES/perl/cpan/Getopt-Long/lib/Getopt/Long.pm
-index 664c8b63..58650f4c 100644
+index 70ac4159..9b8b820c 100644
 --- a/SOURCES/perl/cpan/Getopt-Long/lib/Getopt/Long.pm
 +++ b/SOURCES/perl/cpan/Getopt-Long/lib/Getopt/Long.pm
-@@ -17,15 +17,13 @@ use warnings;
+@@ -17,15 +17,12 @@ use warnings;
  
  package Getopt::Long;
  
 -use vars qw($VERSION);
--$VERSION        =  2.50;
-+our $VERSION = '2.50';
+-$VERSION        =  2.51;
++our $VERSION        =  2.51;
  # For testing versions only.
 -use vars qw($VERSION_STRING);
--$VERSION_STRING = "2.50";
-+our $VERSION_STRING = '2.50';
+-$VERSION_STRING = "2.51";
++our $VERSION_STRING = "2.51";
  
  use Exporter;
 -use vars qw(@ISA @EXPORT @EXPORT_OK);
 -@ISA = qw(Exporter);
-+
 +our @ISA = qw(Exporter);
  
  # Exported subroutines.
  sub GetOptions(@);		# always
-@@ -35,21 +33,28 @@ sub Configure(@);		# on demand
+@@ -35,21 +32,28 @@ sub Configure(@);		# on demand
  sub HelpMessage(@);		# on demand
  sub VersionMessage(@);		# in demand
  
@@ -66,7 +65,7 @@ index 664c8b63..58650f4c 100644
  
  # Really invisible variables.
  my $bundling_values;
-@@ -121,13 +126,6 @@ sub import {
+@@ -121,13 +125,6 @@ sub import {
      Configure(@config) if @config;
  }
  

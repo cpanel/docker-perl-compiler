@@ -1,8 +1,8 @@
 From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: "J. Nick Koston" <nick@cpanel.net>
 Date: Mon, 14 Nov 2016 06:45:10 -0600
-Subject: [PATCH 08/30] Disable 14fileno.t tests since Cpanel::POSIX::Tiny is
- not installed during test
+Subject: [PATCH] Disable 14fileno.t tests since Cpanel::POSIX::Tiny is not
+ installed during test
 
 case CPANEL-9799
 ---
