@@ -15,7 +15,7 @@ that would enter these blocks can be avoided on platforms that
 do not need it.  The Is_VMS checks were especially expensive
 since they had to be run at least once per file.
 ---
- SOURCES/perl/ext/File-Find/lib/File/Find.pm | 50 ++++++++++-----------
+ SOURCES/perl/ext/File-Find/lib/File/Find.pm | 50 +++++++++++++++++++++++++-------------------------
  1 file changed, 25 insertions(+), 25 deletions(-)
 
 diff --git a/SOURCES/perl/ext/File-Find/lib/File/Find.pm b/SOURCES/perl/ext/File-Find/lib/File/Find.pm

@@ -10,12 +10,12 @@ do not update these files, use make regen_headers
 ---
  SOURCES/perl/embed.fnc         |  1 +
  SOURCES/perl/embed.h           |  1 +
- SOURCES/perl/embedvar.h        |  2 +
- SOURCES/perl/intrpvar.h        |  8 ++++
+ SOURCES/perl/embedvar.h        |  2 ++
+ SOURCES/perl/intrpvar.h        |  8 ++++++++
  SOURCES/perl/perl.h            |  2 +-
- SOURCES/perl/proto.h           |  5 ++
- SOURCES/perl/t/porting/regen.t |  2 +
- SOURCES/perl/util.c            | 88 ++++++++++++++++++++++++++++++++++
+ SOURCES/perl/proto.h           |  5 +++++
+ SOURCES/perl/t/porting/regen.t |  2 ++
+ SOURCES/perl/util.c            | 88 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  8 files changed, 108 insertions(+), 1 deletion(-)
 
 diff --git a/SOURCES/perl/embed.fnc b/SOURCES/perl/embed.fnc

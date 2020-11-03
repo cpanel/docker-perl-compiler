@@ -6,7 +6,7 @@ Subject: [PATCH] Disable 14fileno.t tests since Cpanel::POSIX::Tiny is not
 
 case CPANEL-9799
 ---
- SOURCES/perl/cpan/IO-Socket-IP/t/14fileno.t | 26 ++++++++++++++-------
+ SOURCES/perl/cpan/IO-Socket-IP/t/14fileno.t | 26 +++++++++++++++++---------
  1 file changed, 17 insertions(+), 9 deletions(-)
 
 diff --git a/SOURCES/perl/cpan/IO-Socket-IP/t/14fileno.t b/SOURCES/perl/cpan/IO-Socket-IP/t/14fileno.t

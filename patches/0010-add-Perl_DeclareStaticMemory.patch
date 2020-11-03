@@ -10,12 +10,12 @@ proto.h
 ---
  SOURCES/perl/embed.fnc  |  1 +
  SOURCES/perl/embed.h    |  1 +
- SOURCES/perl/embedvar.h |  3 ++
- SOURCES/perl/handy.h    |  4 +++
- SOURCES/perl/intrpvar.h |  5 +++
- SOURCES/perl/iperlsys.h |  6 ++--
+ SOURCES/perl/embedvar.h |  3 +++
+ SOURCES/perl/handy.h    |  4 ++++
+ SOURCES/perl/intrpvar.h |  5 +++++
+ SOURCES/perl/iperlsys.h |  6 +++---
  SOURCES/perl/proto.h    |  1 +
- SOURCES/perl/util.c     | 76 ++++++++++++++++++++++++++++++++++++++++-
+ SOURCES/perl/util.c     | 76 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++-
  SOURCES/perl/util.h     |  2 ++
  9 files changed, 95 insertions(+), 4 deletions(-)
 

@@ -1,0 +1,51 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Nicolas Rochelemagne <rochelemagne@cpanel.net>
+Date: Mon, 2 Nov 2020 10:25:46 -0600
+Subject: [PATCH] typedef INVLIST for B API
+
+---
+ SOURCES/perl/ext/B/B.xs | 1 +
+ SOURCES/perl/perl.h     | 1 +
+ SOURCES/perl/sv.h       | 5 +++++
+ 3 files changed, 7 insertions(+)
+
+diff --git a/SOURCES/perl/ext/B/B.xs b/SOURCES/perl/ext/B/B.xs
+index 8a412654..b3362ae3 100644
+--- a/SOURCES/perl/ext/B/B.xs
++++ b/SOURCES/perl/ext/B/B.xs
+@@ -472,6 +472,7 @@ typedef PADLIST	*B__PADLIST;
+ typedef PADNAMELIST *B__PADNAMELIST;
+ typedef PADNAME	*B__PADNAME;
+ 
++typedef INVLIST  *B__INVLIST;
+ 
+ #ifdef MULTIPLICITY
+ #  define ASSIGN_COMMON_ALIAS(prefix, var) \
+diff --git a/SOURCES/perl/perl.h b/SOURCES/perl/perl.h
+index bfc6c16a..64c42c56 100644
+--- a/SOURCES/perl/perl.h
++++ b/SOURCES/perl/perl.h
+@@ -2701,6 +2701,7 @@ typedef struct gv GV;
+ typedef struct io IO;
+ typedef struct context PERL_CONTEXT;
+ typedef struct block BLOCK;
++typedef struct invlist INVLIST;
+ 
+ typedef struct magic MAGIC;
+ typedef struct xpv XPV;
+diff --git a/SOURCES/perl/sv.h b/SOURCES/perl/sv.h
+index 67e28f8f..5fe764c0 100644
+--- a/SOURCES/perl/sv.h
++++ b/SOURCES/perl/sv.h
+@@ -265,6 +265,11 @@ struct p5rx {
+     _SV_HEAD_UNION;
+ };
+ 
++struct invlist {
++    _SV_HEAD(XINVLIST*);       /* pointer to xpvinvlist body */
++    _SV_HEAD_UNION;
++};
++
+ #undef _SV_HEAD
+ #undef _SV_HEAD_UNION		/* ensure no pollution */
+ 

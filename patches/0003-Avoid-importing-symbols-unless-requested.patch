@@ -7,10 +7,10 @@ Perl should avoid importing symbols unless requested
 
 Bug-cPanel: https://jira.cpanel.net/browse/CPANEL-4359
 ---
- SOURCES/perl/dist/IO/lib/IO/Handle.pm      | 35 +++++------
- SOURCES/perl/dist/IO/lib/IO/Socket.pm      | 24 ++++----
- SOURCES/perl/dist/IO/lib/IO/Socket/INET.pm | 70 +++++++++++++---------
- SOURCES/perl/dist/IO/lib/IO/Socket/UNIX.pm | 31 +++++++---
+ SOURCES/perl/dist/IO/lib/IO/Handle.pm      | 35 ++++++++++++++++++-----------------
+ SOURCES/perl/dist/IO/lib/IO/Socket.pm      | 24 ++++++++++++++----------
+ SOURCES/perl/dist/IO/lib/IO/Socket/INET.pm | 70 ++++++++++++++++++++++++++++++++++++++++++----------------------------
+ SOURCES/perl/dist/IO/lib/IO/Socket/UNIX.pm | 31 ++++++++++++++++++++++---------
  4 files changed, 96 insertions(+), 64 deletions(-)
 
 diff --git a/SOURCES/perl/dist/IO/lib/IO/Handle.pm b/SOURCES/perl/dist/IO/lib/IO/Handle.pm

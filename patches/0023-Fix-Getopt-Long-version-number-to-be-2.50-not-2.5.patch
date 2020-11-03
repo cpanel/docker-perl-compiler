@@ -5,7 +5,7 @@ Subject: [PATCH] Fix Getopt::Long version number to be 2.50 not 2.5
 
 Get rid of use vars and replace with our.
 ---
- .../perl/cpan/Getopt-Long/lib/Getopt/Long.pm  | 33 +++++++++----------
+ SOURCES/perl/cpan/Getopt-Long/lib/Getopt/Long.pm | 33 +++++++++++++++------------------
  1 file changed, 15 insertions(+), 18 deletions(-)
 
 diff --git a/SOURCES/perl/cpan/Getopt-Long/lib/Getopt/Long.pm b/SOURCES/perl/cpan/Getopt-Long/lib/Getopt/Long.pm
