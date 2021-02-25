@@ -1,6 +1,6 @@
 # Docker container for the Perl Compiler
 
-## Sumary
+## Summary
 
 Docker container recipes to build Perl with a few extra patches required by the Perl Compiler.
 The goal is to provide a docker container to speedup the [Perl Compiler](https://github.com/cpanel/perl-compiler) testsuite.
