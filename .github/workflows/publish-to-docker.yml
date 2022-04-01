@@ -1,15 +1,20 @@
 # https://github.com/marketplace/actions/publish-docker
 name: Publish to Docker
-on: [push]
+
+on:
+  push:
+  workflow_dispatch:
+
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@master
+    - uses: actions/checkout@v3
     - name: Publish to Registry
-      uses: elgohr/Publish-Docker-Github-Action@master
+      uses: elgohr/Publish-Docker-Github-Action@3.04
       with:
         name: cpanelos/perl-compiler
         username: ${{ secrets.DOCKER_USERNAME }}
         password: ${{ secrets.DOCKER_GITHUB_TOKEN }}
         dockerfile: Dockerfile
+        #tags: "t1,t2"
