@@ -19,23 +19,23 @@ do not update these files, use make regen_headers
  8 files changed, 108 insertions(+), 1 deletion(-)
 
 diff --git a/SOURCES/perl/embed.fnc b/SOURCES/perl/embed.fnc
-index da0a935d..ddd1828f 100644
+index 277bead9..a496fd1a 100644
 --- a/SOURCES/perl/embed.fnc
 +++ b/SOURCES/perl/embed.fnc
-@@ -2546,6 +2546,7 @@ Ap	|int	|get_mstats	|NN perl_mstats_t *buf|int buflen|int level
- ATpa	|Malloc_t|safesysmalloc	|MEM_SIZE nbytes
- ATpa	|Malloc_t|safesyscalloc	|MEM_SIZE elements|MEM_SIZE size
- ATpR	|Malloc_t|safesysrealloc|Malloc_t where|MEM_SIZE nbytes
+@@ -2715,6 +2715,7 @@ Ap	|int	|get_mstats	|NN perl_mstats_t *buf|int buflen|int level
+ ATdpa	|Malloc_t|safesysmalloc	|MEM_SIZE nbytes
+ ATdpa	|Malloc_t|safesyscalloc	|MEM_SIZE elements|MEM_SIZE size
+ ATdpR	|Malloc_t|safesysrealloc|Malloc_t where|MEM_SIZE nbytes
 +Anpa    |Malloc_t|bc_safesysrealloc|Malloc_t where|MEM_SIZE nbytes
  Anp     |void    |DeclareStaticMemory|Malloc_t from|Malloc_t to|MEM_SIZE size
- ATp	|Free_t	|safesysfree	|Malloc_t where
+ AdTp	|Free_t	|safesysfree	|Malloc_t where
  CrTp	|void	|croak_memory_wrap
 diff --git a/SOURCES/perl/embed.h b/SOURCES/perl/embed.h
-index 80c394e1..45eef988 100644
+index ac70fc42..28bb2fac 100644
 --- a/SOURCES/perl/embed.h
 +++ b/SOURCES/perl/embed.h
-@@ -63,6 +63,7 @@
- #define av_top_index(a)		Perl_av_top_index(aTHX_ a)
+@@ -72,6 +72,7 @@
+ #define av_store_simple(a,b,c)	Perl_av_store_simple(aTHX_ a,b,c)
  #define av_undef(a)		Perl_av_undef(aTHX_ a)
  #define av_unshift(a,b)		Perl_av_unshift(aTHX_ a,b)
 +#define bc_safesysrealloc	Perl_bc_safesysrealloc
@@ -43,10 +43,10 @@ index 80c394e1..45eef988 100644
  #define block_gimme()		Perl_block_gimme(aTHX)
  #define block_start(a)		Perl_block_start(aTHX_ a)
 diff --git a/SOURCES/perl/embedvar.h b/SOURCES/perl/embedvar.h
-index 2ee1b8a6..140963a2 100644
+index c89e257d..1210c9d1 100644
 --- a/SOURCES/perl/embedvar.h
 +++ b/SOURCES/perl/embedvar.h
-@@ -313,6 +313,8 @@
+@@ -292,6 +292,8 @@
  #define PL_static_memory_buffer (vTHX->Istatic_memory_buffer)
  #define PL_static_memory_from   (vTHX->Istatic_memory_from)
  #define PL_static_memory_to     (vTHX->Istatic_memory_to)
@@ -56,10 +56,10 @@ index 2ee1b8a6..140963a2 100644
  #define PL_statusvalue		(vTHX->Istatusvalue)
  #define PL_statusvalue_posix	(vTHX->Istatusvalue_posix)
 diff --git a/SOURCES/perl/intrpvar.h b/SOURCES/perl/intrpvar.h
-index a4a6a969..4d39caed 100644
+index b9dac8fb..bf47cb73 100644
 --- a/SOURCES/perl/intrpvar.h
 +++ b/SOURCES/perl/intrpvar.h
-@@ -955,6 +955,14 @@ PERLVARI(I, static_memory_from,        Malloc_t,       0)      /* first memory a
+@@ -1045,6 +1045,14 @@ PERLVARI(I, static_memory_from,        Malloc_t,       0)      /* first memory a
  PERLVARI(I, static_memory_to,  Malloc_t,       0)      /* last memory address where we have declared a usage of static memory */
  PERLVARI(I, static_memory_buffer, STATIC_MEMORY_AREA *, NULL)   /* buffer storage (linked list for now) */
  
@@ -75,10 +75,10 @@ index a4a6a969..4d39caed 100644
   * above on where there are gaps which currently will be structure padding.  */
  
 diff --git a/SOURCES/perl/perl.h b/SOURCES/perl/perl.h
-index 08d5e786..bfc6c16a 100644
+index baf1719f..caf8f0af 100644
 --- a/SOURCES/perl/perl.h
 +++ b/SOURCES/perl/perl.h
-@@ -1267,7 +1267,7 @@ EXTERN_C int usleep(unsigned int);
+@@ -1376,7 +1376,7 @@ Use L</UV> to declare variables of the maximum usable size on this platform.
  #else  /* MYMALLOC */
  #  define safemalloc  safesysmalloc
  #  define safecalloc  safesyscalloc
@@ -88,7 +88,7 @@ index 08d5e786..bfc6c16a 100644
  #  define CHECK_MALLOC_TOO_LATE_FOR(ch)		((void)0)
  #  define CHECK_MALLOC_TAINT(newval)		((void)0)
 diff --git a/SOURCES/perl/proto.h b/SOURCES/perl/proto.h
-index 55354869..51f1870f 100644
+index 12d1652c..9073b57e 100644
 --- a/SOURCES/perl/proto.h
 +++ b/SOURCES/perl/proto.h
 @@ -35,6 +35,7 @@ PERL_STATIC_INLINE GV *	Perl_CvGV(pTHX_ CV *sv);
@@ -99,7 +99,7 @@ index 55354869..51f1870f 100644
  PERL_CALLCONV void  Perl_DeclareStaticMemory(Malloc_t from, Malloc_t to, MEM_SIZE size);
  PERL_CALLCONV int	Perl_Gv_AMupdate(pTHX_ HV* stash, bool destructing);
  #define PERL_ARGS_ASSERT_GV_AMUPDATE	\
-@@ -298,6 +299,10 @@ PERL_CALLCONV void	Perl_av_undef(pTHX_ AV *av);
+@@ -336,6 +337,10 @@ PERL_CALLCONV void	Perl_av_undef(pTHX_ AV *av);
  PERL_CALLCONV void	Perl_av_unshift(pTHX_ AV *av, SSize_t num);
  #define PERL_ARGS_ASSERT_AV_UNSHIFT	\
  	assert(av)
@@ -111,7 +111,7 @@ index 55354869..51f1870f 100644
  			__attribute__warn_unused_result__;
  #define PERL_ARGS_ASSERT_BIND_MATCH	\
 diff --git a/SOURCES/perl/t/porting/regen.t b/SOURCES/perl/t/porting/regen.t
-index b4d438f5..4fe5d60c 100644
+index d684fdc1..3cf5d6e7 100644
 --- a/SOURCES/perl/t/porting/regen.t
 +++ b/SOURCES/perl/t/porting/regen.t
 @@ -12,6 +12,8 @@ require './regen/regen_lib.pl';
@@ -124,10 +124,10 @@ index b4d438f5..4fe5d60c 100644
    skip_all( "- regen.pl needs porting." );
  }
 diff --git a/SOURCES/perl/util.c b/SOURCES/perl/util.c
-index 504f78a1..be643e38 100644
+index d84ff81a..eea9afd0 100644
 --- a/SOURCES/perl/util.c
 +++ b/SOURCES/perl/util.c
-@@ -207,6 +207,94 @@ Perl_safesysmalloc(MEM_SIZE size)
+@@ -213,6 +213,94 @@ Perl_safesysmalloc(MEM_SIZE size)
      return ptr;
  }
  

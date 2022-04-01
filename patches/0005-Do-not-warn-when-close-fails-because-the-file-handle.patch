@@ -15,15 +15,15 @@ p5h2017 note: cPanel should keep this patch
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/SOURCES/perl/doio.c b/SOURCES/perl/doio.c
-index 13d412a3..9fb91950 100644
+index 87790da1..ba89d853 100644
 --- a/SOURCES/perl/doio.c
 +++ b/SOURCES/perl/doio.c
-@@ -1836,7 +1836,7 @@ Perl_io_close(pTHX_ IO *io, GV *gv, bool not_implicit, bool warn_on_fail)
- 	}
- 	IoOFP(io) = IoIFP(io) = NULL;
+@@ -1902,7 +1902,7 @@ Perl_io_close(pTHX_ IO *io, GV *gv, bool not_implicit, bool warn_on_fail)
+         }
+         IoOFP(io) = IoIFP(io) = NULL;
  
--	if (warn_on_fail && !retval) {
-+	if (0 && warn_on_fail && !retval) {
- 	    if (gv)
- 		Perl_ck_warner_d(aTHX_ packWARN(WARN_IO),
- 				"Warning: unable to close filehandle %"
+-        if (warn_on_fail && !retval) {
++        if (0 && warn_on_fail && !retval) {
+             if (gv)
+                 Perl_ck_warner_d(aTHX_ packWARN(WARN_IO),
+                                 "Warning: unable to close filehandle %"

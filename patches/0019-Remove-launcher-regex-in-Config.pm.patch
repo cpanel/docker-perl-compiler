@@ -9,7 +9,7 @@ case CPANEL-22292
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/SOURCES/perl/configpm b/SOURCES/perl/configpm
-index 8c4bd14f..f3f57a45 100755
+index 94a47780..a491f763 100755
 --- a/SOURCES/perl/configpm
 +++ b/SOURCES/perl/configpm
 @@ -846,7 +846,7 @@ sub DESTROY { }

@@ -6,15 +6,14 @@ Subject: [PATCH] Hard code frequent Config checks so it's not needed
 ---
  SOURCES/perl/cpan/Tie-RefHash/lib/Tie/RefHash.pm | 3 +--
  SOURCES/perl/cpan/autodie/lib/Fatal.pm           | 4 ++--
- SOURCES/perl/dist/PathTools/Cwd.pm               | 2 +-
- SOURCES/perl/lib/File/Copy.pm                    | 5 ++---
- 4 files changed, 6 insertions(+), 8 deletions(-)
+ SOURCES/perl/lib/File/Copy.pm                    | 6 +++---
+ 3 files changed, 6 insertions(+), 7 deletions(-)
 
 diff --git a/SOURCES/perl/cpan/Tie-RefHash/lib/Tie/RefHash.pm b/SOURCES/perl/cpan/Tie-RefHash/lib/Tie/RefHash.pm
-index ed72abc9..4adbe6d4 100644
+index 896680f9..949da781 100644
 --- a/SOURCES/perl/cpan/Tie-RefHash/lib/Tie/RefHash.pm
 +++ b/SOURCES/perl/cpan/Tie-RefHash/lib/Tie/RefHash.pm
-@@ -101,8 +101,7 @@ use Carp qw/croak/;
+@@ -79,8 +79,7 @@ use Carp ();
  BEGIN {
    local $@;
    # determine whether we need to take care of threads
@@ -25,7 +24,7 @@ index ed72abc9..4adbe6d4 100644
    *_HAS_SCALAR_UTIL = eval { require Scalar::Util; 1 } ? sub () { 1 } : sub () { 0 };
    *_HAS_WEAKEN = defined(&Scalar::Util::weaken) ? sub () { 1 } : sub () { 0 };
 diff --git a/SOURCES/perl/cpan/autodie/lib/Fatal.pm b/SOURCES/perl/cpan/autodie/lib/Fatal.pm
-index 09abfb85..6e30e4f6 100644
+index 744ca722..812ddc45 100644
 --- a/SOURCES/perl/cpan/autodie/lib/Fatal.pm
 +++ b/SOURCES/perl/cpan/autodie/lib/Fatal.pm
 @@ -7,7 +7,6 @@ use Carp;
@@ -46,39 +45,27 @@ index 09abfb85..6e30e4f6 100644
  
  # We have some tags that can be passed in for use with import.
  # These are all assumed to be CORE::
-diff --git a/SOURCES/perl/dist/PathTools/Cwd.pm b/SOURCES/perl/dist/PathTools/Cwd.pm
-index 9b173c23..ce51ebad 100644
---- a/SOURCES/perl/dist/PathTools/Cwd.pm
-+++ b/SOURCES/perl/dist/PathTools/Cwd.pm
-@@ -214,7 +214,7 @@ sub _backtick_pwd {
- 
- unless ($METHOD_MAP{$^O}{cwd} or defined &cwd) {
-     # The pwd command is not available in some chroot(2)'ed environments
--    my $sep = $Config::Config{path_sep} || ':';
-+    my $sep = ':';
-     my $os = $^O;  # Protect $^O from tainting
- 
- 
 diff --git a/SOURCES/perl/lib/File/Copy.pm b/SOURCES/perl/lib/File/Copy.pm
-index 63609cc2..2b394d85 100644
+index ce659a02..73eccf8e 100644
 --- a/SOURCES/perl/lib/File/Copy.pm
 +++ b/SOURCES/perl/lib/File/Copy.pm
-@@ -11,7 +11,7 @@ use 5.006;
- use strict;
- use warnings; no warnings 'newline';
+@@ -14,7 +14,7 @@ no warnings 'experimental::builtin';
+ use builtin 'blessed';
+ use overload;
  use File::Spec;
 -use Config;
 +
- # During perl build, we need File::Copy but Scalar::Util might not be built yet
- # And then we need these games to avoid loading overload, as that will
- # confuse miniperl during the bootstrap of perl.
-@@ -99,8 +99,7 @@ sub copy {
+ # We want HiRes stat and utime if available
+ BEGIN { eval q{ use Time::HiRes qw( stat utime ) } };
+ our(@ISA, @EXPORT, @EXPORT_OK, $VERSION, $Too_Big, $Syscopy_is_copy);
+@@ -97,8 +97,8 @@ sub copy {
  	$to = _catname($from, $to);
      }
  
 -    if ((($Config{d_symlink} && $Config{d_readlink}) || $Config{d_link}) &&
--	!($^O eq 'MSWin32' || $^O eq 'os2')) {
-+    if(1) { # Linux supports symlinks
+-	!($^O eq 'os2')) {
++
++    if (1) { # Linux supports symlinks
  	my @fs = stat($from);
  	if (@fs) {
  	    my @ts = stat($to);

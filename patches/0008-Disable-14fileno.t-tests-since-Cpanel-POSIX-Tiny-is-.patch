@@ -10,10 +10,10 @@ case CPANEL-9799
  1 file changed, 17 insertions(+), 9 deletions(-)
 
 diff --git a/SOURCES/perl/cpan/IO-Socket-IP/t/14fileno.t b/SOURCES/perl/cpan/IO-Socket-IP/t/14fileno.t
-index 6ace1c6f..fe20ba62 100644
+index 6e9ae923..6ee2f8f6 100644
 --- a/SOURCES/perl/cpan/IO-Socket-IP/t/14fileno.t
 +++ b/SOURCES/perl/cpan/IO-Socket-IP/t/14fileno.t
-@@ -13,16 +13,24 @@ socket( my $tmph, AF_INET, SOCK_STREAM, 0 ) or die "Cannot socket() - $!";
+@@ -14,16 +14,24 @@ socket( my $tmph, AF_INET, SOCK_STREAM, 0 ) or die "Cannot socket() - $!";
  my $socket = IO::Socket::IP->new or die "Cannot create IO::Socket::IP - $@";
  
  $socket->socket( AF_INET, SOCK_STREAM, 0 ) or die "Cannot socket() - $!";

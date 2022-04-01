@@ -16,10 +16,10 @@ Changelog:
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/SOURCES/perl/perl.c b/SOURCES/perl/perl.c
-index f42c8096..d26a4c93 100644
+index 91bbbc60..f2ea2d50 100644
 --- a/SOURCES/perl/perl.c
 +++ b/SOURCES/perl/perl.c
-@@ -370,7 +370,7 @@ perl_construct(pTHXx)
+@@ -353,7 +353,7 @@ perl_construct(pTHXx)
          /* SHAREKEYS tells us that the hash has its keys shared with PL_strtab,
           * which is not the case with PL_strtab itself */
          HvSHAREKEYS_off(PL_strtab);			/* mandatory */

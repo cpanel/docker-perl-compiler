@@ -16,10 +16,10 @@ Upstream-URL: https://github.com/andk/cpanpm/pull/123
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/SOURCES/perl/cpan/CPAN/lib/CPAN/FirstTime.pm b/SOURCES/perl/cpan/CPAN/lib/CPAN/FirstTime.pm
-index af4a6d77..b235c490 100644
+index 8934f4a2..648e4a77 100644
 --- a/SOURCES/perl/cpan/CPAN/lib/CPAN/FirstTime.pm
 +++ b/SOURCES/perl/cpan/CPAN/lib/CPAN/FirstTime.pm
-@@ -892,7 +892,7 @@ sub init {
+@@ -906,7 +906,7 @@ sub init {
      ) {
          local $auto_config = 0; # We *must* ask, even under autoconfig
          local *_real_prompt;    # We *must* show prompt

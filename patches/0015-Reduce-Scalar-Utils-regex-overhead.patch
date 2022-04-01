@@ -7,25 +7,19 @@ case CPANEL-21503
 
 https://cpanel.wiki/display/LD/Reducing+Binary+Startup+Time
 ---
- SOURCES/perl/cpan/Scalar-List-Utils/lib/Scalar/Util.pm | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ SOURCES/perl/cpan/Scalar-List-Utils/lib/Scalar/Util.pm | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/SOURCES/perl/cpan/Scalar-List-Utils/lib/Scalar/Util.pm b/SOURCES/perl/cpan/Scalar-List-Utils/lib/Scalar/Util.pm
-index a7345aad..cfdc234f 100644
+index 984ccdde..00bed8de 100644
 --- a/SOURCES/perl/cpan/Scalar-List-Utils/lib/Scalar/Util.pm
 +++ b/SOURCES/perl/cpan/Scalar-List-Utils/lib/Scalar/Util.pm
-@@ -36,12 +36,12 @@ unless (defined &isvstring) {
- }
+@@ -25,7 +25,7 @@ List::Util->VERSION( $VERSION ); # Ensure we got the right XS version (RT#100863
  
+ # populating @EXPORT_FAIL is done in the XS code
  sub export_fail {
--  if (grep { /^(?:weaken|isweak)$/ } @_ ) {
-+  if (grep { $_ eq 'weaken' || $_ eq 'isweak' } @_ ) {
-     require Carp;
-     Carp::croak("Weak references are not implemented in the version of perl");
-   }
- 
 -  if (grep { /^isvstring$/ } @_ ) {
-+  if (grep { $_ eq 'isvstring' } @_ ) {
++  if (grep {  $_ eq 'isvstring' } @_ ) {
      require Carp;
-     Carp::croak("Vstrings are not implemented in the version of perl");
+     Carp::croak("Vstrings are not implemented in this version of perl");
    }

@@ -19,10 +19,10 @@ and https://jira.cpanel.net/browse/CM-1191
  1 file changed, 4 insertions(+), 2 deletions(-)
 
 diff --git a/SOURCES/perl/cpan/IO-Socket-IP/lib/IO/Socket/IP.pm b/SOURCES/perl/cpan/IO-Socket-IP/lib/IO/Socket/IP.pm
-index 5a5ee7d2..4982160b 100644
+index 3158ef55..0b622053 100644
 --- a/SOURCES/perl/cpan/IO-Socket-IP/lib/IO/Socket/IP.pm
 +++ b/SOURCES/perl/cpan/IO-Socket-IP/lib/IO/Socket/IP.pm
-@@ -30,7 +30,6 @@ use Socket 1.97 qw(
+@@ -33,7 +33,6 @@ use Socket 1.97 qw(
  );
  my $AF_INET6 = eval { Socket::AF_INET6() }; # may not be defined
  my $AI_ADDRCONFIG = eval { Socket::AI_ADDRCONFIG() } || 0;
@@ -30,7 +30,7 @@ index 5a5ee7d2..4982160b 100644
  use Errno qw( EINVAL EINPROGRESS EISCONN ENOTCONN ETIMEDOUT EWOULDBLOCK EOPNOTSUPP );
  
  use constant HAVE_MSWIN32 => ( $^O eq "MSWin32" );
-@@ -949,7 +948,10 @@ sub socket :method
+@@ -979,7 +978,10 @@ sub socket :method
     # I hate core prototypes sometimes...
     socket( my $tmph, $_[0], $_[1], $_[2] ) or return undef;
  

@@ -1,0 +1,33 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Sawyer X <sawyerx.ext@cpanel.net>
+Date: Tue, 5 Oct 2021 16:19:49 +0000
+Subject: [PATCH] Speed up file_name_is_absolute for Template Toolkit
+
+This is the original patch:
+
+    From: "J. Nick Koston" <nick@cpanel.net>
+    Date: Wed, 26 Jul 2017 14:31:18 -0500
+    Subject: [PATCH] Speed up file_name_is_absolute for Template Toolkit
+
+    case CPANEL-14788
+---
+ SOURCES/perl/dist/PathTools/lib/File/Spec/Unix.pm | 6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
+
+diff --git a/SOURCES/perl/dist/PathTools/lib/File/Spec/Unix.pm b/SOURCES/perl/dist/PathTools/lib/File/Spec/Unix.pm
+index 52904b48..378cc295 100644
+--- a/SOURCES/perl/dist/PathTools/lib/File/Spec/Unix.pm
++++ b/SOURCES/perl/dist/PathTools/lib/File/Spec/Unix.pm
+@@ -241,8 +241,10 @@ L<File::Spec::VMS/file_name_is_absolute>).
+ =cut
+ 
+ sub file_name_is_absolute {
+-    my ($self,$file) = @_;
+-    return scalar($file =~ m:^/:s);
++    #my($self,$file) = @_;
++    #$self = $_[0]
++    #$file = $_[1]
++    return index($_[1],'/') == 0 ? 1 : 0;
+ }
+ 
+ =item path

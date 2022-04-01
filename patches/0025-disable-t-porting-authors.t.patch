@@ -1,0 +1,22 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Nicolas R <atoomic@cpan.org>
+Date: Thu, 31 Mar 2022 22:28:11 +0000
+Subject: [PATCH] disable t/porting/authors.t
+
+---
+ SOURCES/perl/t/porting/authors.t | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/SOURCES/perl/t/porting/authors.t b/SOURCES/perl/t/porting/authors.t
+index 58dd3fa0..dff536be 100644
+--- a/SOURCES/perl/t/porting/authors.t
++++ b/SOURCES/perl/t/porting/authors.t
+@@ -11,6 +11,8 @@ use TestInit qw(T);    # T is chdir to the top level
+ use strict;
+ use File::Spec;
+ 
++skip_all("cPanel build: do not worry about authors");
++
+ find_git_or_skip('all');
+ skip_all(
+     "This distro may have modified some files in cpan/. Skipping validation.")

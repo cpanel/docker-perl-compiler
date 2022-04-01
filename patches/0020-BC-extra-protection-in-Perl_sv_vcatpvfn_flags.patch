@@ -8,10 +8,10 @@ Subject: [PATCH] BC extra protection in Perl_sv_vcatpvfn_flags
  1 file changed, 3 insertions(+), 1 deletion(-)
 
 diff --git a/SOURCES/perl/sv.c b/SOURCES/perl/sv.c
-index e6cba0d6..9d4413ff 100644
+index 4c05ab0c..334b992c 100644
 --- a/SOURCES/perl/sv.c
 +++ b/SOURCES/perl/sv.c
-@@ -12489,9 +12489,11 @@ Perl_sv_vcatpvfn_flags(pTHX_ SV *const sv, const char *const pat, const STRLEN p
+@@ -12483,9 +12483,11 @@ Perl_sv_vcatpvfn_flags(pTHX_ SV *const sv, const char *const pat, const STRLEN p
                          has_precis = TRUE;
                      }
                      argsv = MUTABLE_SV(va_arg(*args, void*));

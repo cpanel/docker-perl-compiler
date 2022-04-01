@@ -9,7 +9,7 @@ disable perl from installing man during make install
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/SOURCES/perl/installman b/SOURCES/perl/installman
-index 0154be4d..4056ee6e 100755
+index 686862d8..5d94e677 100755
 --- a/SOURCES/perl/installman
 +++ b/SOURCES/perl/installman
 @@ -1,5 +1,5 @@
