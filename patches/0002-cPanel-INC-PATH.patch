@@ -9,10 +9,10 @@ Re-order INC path so it's VENDOR/CORE/SITELIB
  1 file changed, 3 insertions(+), 4 deletions(-)
 
 diff --git a/SOURCES/perl/perl.c b/SOURCES/perl/perl.c
-index 2013a760..f42c8096 100644
+index 1b666590..a796a291 100644
 --- a/SOURCES/perl/perl.c
 +++ b/SOURCES/perl/perl.c
-@@ -4742,16 +4742,15 @@ S_init_perllib(pTHX)
+@@ -4748,16 +4748,15 @@ S_init_perllib(pTHX)
  /* Use the ~-expanded versions of APPLLIB (undocumented),
      SITEARCH, SITELIB, VENDORARCH, VENDORLIB, ARCHLIB and PRIVLIB
  */

@@ -14,7 +14,7 @@ Bug-cPanel: https://jira.cpanel.net/browse/CPANEL-4359
  4 files changed, 96 insertions(+), 64 deletions(-)
 
 diff --git a/SOURCES/perl/dist/IO/lib/IO/Handle.pm b/SOURCES/perl/dist/IO/lib/IO/Handle.pm
-index 45b6d4f5..1c9bc239 100644
+index edaacffe..290f9a72 100644
 --- a/SOURCES/perl/dist/IO/lib/IO/Handle.pm
 +++ b/SOURCES/perl/dist/IO/lib/IO/Handle.pm
 @@ -263,9 +263,10 @@ Derived from FileHandle.pm by Graham Barr E<lt>F<gbarr@pobox.com>E<gt>
@@ -143,7 +143,7 @@ index 45b6d4f5..1c9bc239 100644
      if(ref($io)) {
          print $io @_;
 diff --git a/SOURCES/perl/dist/IO/lib/IO/Socket.pm b/SOURCES/perl/dist/IO/lib/IO/Socket.pm
-index f10ac375..32a5d30d 100644
+index 5153920a..bd31c7b4 100644
 --- a/SOURCES/perl/dist/IO/lib/IO/Socket.pm
 +++ b/SOURCES/perl/dist/IO/lib/IO/Socket.pm
 @@ -9,12 +9,12 @@ package IO::Socket;
@@ -163,7 +163,7 @@ index f10ac375..32a5d30d 100644
  
  # legacy
  
-@@ -32,7 +32,12 @@ sub import {
+@@ -34,7 +34,12 @@ sub import {
      if (@_ && $_[0] eq 'sockatmark') { # not very extensible but for now, fast
  	Exporter::export_to_level('IO::Socket', 1, $pkg, 'sockatmark');
      } else {
@@ -177,16 +177,16 @@ index f10ac375..32a5d30d 100644
  	Exporter::export 'Socket', $callpkg, @_;
      }
  }
-@@ -131,7 +136,7 @@ sub connect {
+@@ -133,7 +138,7 @@ sub connect {
  		# Using the exception
  		# set we now emulate the behavior in Linux
  		#    - Karthik Rajagopalan
 -		$err = $sock->getsockopt(SOL_SOCKET,SO_ERROR);
 +		$err = $sock->getsockopt(&Socket::SOL_SOCKET, &Socket::SO_ERROR);
- 		$@ = "connect: $err";
+ 		$errstr = $@ = "connect: $err";
  	    }
  	    elsif(!@$w[0]) {
-@@ -162,7 +167,6 @@ sub connect {
+@@ -164,7 +169,6 @@ sub connect {
  
      $err ? undef : $sock;
  }
@@ -194,7 +194,7 @@ index f10ac375..32a5d30d 100644
  # Enable/disable blocking IO on sockets.
  # Without args return the current status of blocking,
  # with args change the mode as appropriate, returning the
-@@ -343,8 +347,8 @@ sub getsockopt {
+@@ -345,8 +349,8 @@ sub getsockopt {
  
  sub sockopt {
      my $sock = shift;
@@ -205,7 +205,7 @@ index f10ac375..32a5d30d 100644
  }
  
  sub atmark {
-@@ -369,7 +373,7 @@ sub sockdomain {
+@@ -371,7 +375,7 @@ sub sockdomain {
      my $sock = shift;
      if (!defined(${*$sock}{'io_socket_domain'})) {
  	my $addr = $sock->sockname();
@@ -215,7 +215,7 @@ index f10ac375..32a5d30d 100644
      }
      ${*$sock}{'io_socket_domain'};
 diff --git a/SOURCES/perl/dist/IO/lib/IO/Socket/INET.pm b/SOURCES/perl/dist/IO/lib/IO/Socket/INET.pm
-index 8688f375..7d3cf395 100644
+index a2de00e3..345407ca 100644
 --- a/SOURCES/perl/dist/IO/lib/IO/Socket/INET.pm
 +++ b/SOURCES/perl/dist/IO/lib/IO/Socket/INET.pm
 @@ -7,29 +7,43 @@
@@ -233,7 +233,7 @@ index 8688f375..7d3cf395 100644
 +use Errno      ();
  
  our @ISA = qw(IO::Socket);
- our $VERSION = "1.41";
+ our $VERSION = "1.49";
  
  my $EINVAL = exists(&Errno::EINVAL) ? Errno::EINVAL() : 1;
  
@@ -414,7 +414,7 @@ index 8688f375..7d3cf395 100644
  
  1;
 diff --git a/SOURCES/perl/dist/IO/lib/IO/Socket/UNIX.pm b/SOURCES/perl/dist/IO/lib/IO/Socket/UNIX.pm
-index 04b36eaf..a2a38e60 100644
+index 60bdc047..b8d7469f 100644
 --- a/SOURCES/perl/dist/IO/lib/IO/Socket/UNIX.pm
 +++ b/SOURCES/perl/dist/IO/lib/IO/Socket/UNIX.pm
 @@ -7,13 +7,26 @@
@@ -428,7 +428,7 @@ index 04b36eaf..a2a38e60 100644
 +use Exporter   ();
  
  our @ISA = qw(IO::Socket);
- our $VERSION = "1.41";
+ our $VERSION = "1.49";
  
 -IO::Socket::UNIX->register_domain( AF_UNIX );
 +IO::Socket::UNIX->register_domain( &Socket::AF_UNIX );
@@ -446,7 +446,7 @@ index 04b36eaf..a2a38e60 100644
  
  sub new {
      my $class = shift;
-@@ -25,22 +38,22 @@ sub configure {
+@@ -25,9 +38,9 @@ sub configure {
      my($sock,$arg) = @_;
      my($bport,$cport);
  
@@ -457,6 +457,10 @@ index 04b36eaf..a2a38e60 100644
 +    $sock->socket(&Socket::AF_UNIX, $type, 0) or
  	return undef;
  
+     if(exists $arg->{Blocking}) {
+@@ -35,16 +48,16 @@ sub configure {
+ 	    return undef;
+     }
      if(exists $arg->{Local}) {
 -	my $addr = sockaddr_un($arg->{Local});
 +	my $addr = Socket::sockaddr_un($arg->{Local});
@@ -474,7 +478,7 @@ index 04b36eaf..a2a38e60 100644
  	$sock->connect($addr) or
  	    return undef;
      }
-@@ -51,13 +64,13 @@ sub configure {
+@@ -55,13 +68,13 @@ sub configure {
  sub hostpath {
      @_ == 1 or croak 'usage: $sock->hostpath()';
      my $n = $_[0]->sockname || return undef;

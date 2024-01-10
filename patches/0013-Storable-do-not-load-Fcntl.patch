@@ -11,7 +11,7 @@ Patch Storable to mitigate issue with recent SEGV
  1 file changed, 3 insertions(+), 10 deletions(-)
 
 diff --git a/SOURCES/perl/dist/Storable/Storable.pm b/SOURCES/perl/dist/Storable/Storable.pm
-index 1a750f1b..ccab8196 100644
+index ef417c69..c8a39ec6 100644
 --- a/SOURCES/perl/dist/Storable/Storable.pm
 +++ b/SOURCES/perl/dist/Storable/Storable.pm
 @@ -80,16 +80,9 @@ BEGIN {

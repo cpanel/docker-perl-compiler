@@ -11,122 +11,109 @@ In addition to use it for B::C in order to use static cowpvs
 we will also make it available for any uncompiled programs,
 when a COW strings reach the 255 it will never decrease / increase.
 ---
- SOURCES/perl/sv.c | 35 ++++++++++++++++++-----------------
+ SOURCES/perl/sv.c | 29 +++++++++++++++--------------
  SOURCES/perl/sv.h |  3 ++-
- 2 files changed, 20 insertions(+), 18 deletions(-)
+ 2 files changed, 17 insertions(+), 15 deletions(-)
 
 diff --git a/SOURCES/perl/sv.c b/SOURCES/perl/sv.c
-index 9c7f3ba4..e6cba0d6 100644
+index 16bba941..c95530df 100644
 --- a/SOURCES/perl/sv.c
 +++ b/SOURCES/perl/sv.c
-@@ -4224,7 +4224,7 @@ static void
- S_sv_buf_to_rw(pTHX_ SV *sv)
- {
-     struct perl_memory_debug_header * const header =
--	(struct perl_memory_debug_header *)(SvPVX(sv)-PERL_MEMORY_DEBUG_HEADER_SIZE);
-+       (struct perl_memory_debug_header *)(SvPVX(sv)-PERL_MEMORY_DEBUG_HEADER_SIZE);
-     const MEM_SIZE len = header->size;
-     PERL_ARGS_ASSERT_SV_BUF_TO_RW;
-     if (mprotect(header, len, PROT_READ|PROT_WRITE))
-@@ -4666,9 +4666,7 @@ Perl_sv_setsv_flags(pTHX_ SV *dstr, SV* sstr, const I32 flags)
- 		 (sflags & SVf_IsCOW
- 		   ? (!len ||
-                        (  (CHECK_COWBUF_THRESHOLD(cur,len) || SvLEN(dstr) < cur+1)
--			  /* If this is a regular (non-hek) COW, only so
--			     many COW "copies" are possible. */
--		       && CowREFCNT(sstr) != SV_COW_REFCNT_MAX  ))
-+			    ))
- 		   : (  (sflags & CAN_COW_MASK) == CAN_COW_FLAGS
- 		     && !(SvFLAGS(dstr) & SVf_BREAK)
+@@ -4502,10 +4502,8 @@ Perl_sv_setsv_flags(pTHX_ SV *dsv, SV* ssv, const I32 flags)
+ #ifdef PERL_COPY_ON_WRITE
+                  (sflags & SVf_IsCOW
+                    ? (!len ||
+-                       (  (CHECK_COWBUF_THRESHOLD(cur,len) || SvLEN(dsv) < cur+1)
+-                          /* If this is a regular (non-hek) COW, only so
+-                             many COW "copies" are possible. */
+-                       && CowREFCNT(ssv) != SV_COW_REFCNT_MAX  ))
++                       (  (CHECK_COWBUF_THRESHOLD(cur,len) || SvLEN(dsv) < cur+1) )
++                     )
+                    : (  (sflags & CAN_COW_MASK) == CAN_COW_FLAGS
+                      && !(SvFLAGS(dsv) & SVf_BREAK)
                       && CHECK_COW_THRESHOLD(cur,len) && cur+1 < len
-@@ -4703,7 +4701,7 @@ Perl_sv_setsv_flags(pTHX_ SV *dstr, SV* sstr, const I32 flags)
- 		    if (sflags & SVf_IsCOW) {
- 			sv_buf_to_rw(sstr);
- 		    }
--		    CowREFCNT(sstr)++;
-+		    if(CowREFCNT(sstr) != COW_STATIC ) CowREFCNT(sstr)++;
-                     SvPV_set(dstr, SvPVX_mutable(sstr));
-                     sv_buf_to_ro(sstr);
+@@ -4540,7 +4538,7 @@ Perl_sv_setsv_flags(pTHX_ SV *dsv, SV* ssv, const I32 flags)
+                     if (sflags & SVf_IsCOW) {
+                         sv_buf_to_rw(ssv);
+                     }
+-                    CowREFCNT(ssv)++;
++                    if(CowREFCNT(ssv) != COW_STATIC ) CowREFCNT(ssv)++;
+                     SvPV_set(dsv, SvPVX_mutable(ssv));
+                     sv_buf_to_ro(ssv);
              } else
-@@ -4893,7 +4891,6 @@ Perl_sv_setsv_cow(pTHX_ SV *dstr, SV *sstr)
- 	    goto common_exit;
- 	}
- 	assert(SvCUR(sstr)+1 < SvLEN(sstr));
--	assert(CowREFCNT(sstr) < SV_COW_REFCNT_MAX);
+@@ -4742,7 +4740,6 @@ Perl_sv_setsv_cow(pTHX_ SV *dsv, SV *ssv)
+             goto common_exit;
+         }
+         assert(SvCUR(ssv)+1 < SvLEN(ssv));
+-        assert(CowREFCNT(ssv) < SV_COW_REFCNT_MAX);
      } else {
- 	assert ((SvFLAGS(sstr) & CAN_COW_MASK) == CAN_COW_FLAGS);
- 	SvUPGRADE(sstr, SVt_COW);
-@@ -4905,7 +4902,7 @@ Perl_sv_setsv_cow(pTHX_ SV *dstr, SV *sstr)
+         assert ((SvFLAGS(ssv) & CAN_COW_MASK) == CAN_COW_FLAGS);
+         SvUPGRADE(ssv, SVt_COW);
+@@ -4754,7 +4751,7 @@ Perl_sv_setsv_cow(pTHX_ SV *dsv, SV *ssv)
  #  ifdef PERL_DEBUG_READONLY_COW
-     if (already) sv_buf_to_rw(sstr);
+     if (already) sv_buf_to_rw(ssv);
  #  endif
--    CowREFCNT(sstr)++;	
-+    if(CowREFCNT(sstr) != COW_STATIC ) CowREFCNT(sstr)++;
-     new_pv = SvPVX_mutable(sstr);
-     sv_buf_to_ro(sstr);
+-    CowREFCNT(ssv)++;
++    if(CowREFCNT(ssv) != COW_STATIC ) CowREFCNT(ssv)++;
+     new_pv = SvPVX_mutable(ssv);
+     sv_buf_to_ro(ssv);
  
-@@ -5229,9 +5226,11 @@ S_sv_uncow(pTHX_ SV * const sv, const U32 flags)
- 	    {
- 		U8 cowrefcnt = CowREFCNT(sv);
- 		if(cowrefcnt != 0) {
--		    cowrefcnt--;
--		    CowREFCNT(sv) = cowrefcnt;
--		    sv_buf_to_ro(sv);
-+            if(cowrefcnt != COW_STATIC ) {
-+    		    cowrefcnt--;
-+                CowREFCNT(sv) = cowrefcnt;
-+            }
-+                sv_buf_to_ro(sv);
- 		    goto copy_over;
- 		}
- 	    }
-@@ -6803,9 +6802,9 @@ Perl_sv_clear(pTHX_ SV *const orig_sv)
- 		}
- 	    }
+@@ -5113,8 +5110,10 @@ S_sv_uncow(pTHX_ SV * const sv, const U32 flags)
+             {
+                 U8 cowrefcnt = CowREFCNT(sv);
+                 if(cowrefcnt != 0) {
+-                    cowrefcnt--;
+-                    CowREFCNT(sv) = cowrefcnt;
++                    if(cowrefcnt != COW_STATIC ) {
++                        cowrefcnt--;
++                        CowREFCNT(sv) = cowrefcnt;
++                    }
+                     sv_buf_to_ro(sv);
+                     goto copy_over;
+                 }
+@@ -6739,8 +6738,8 @@ Perl_sv_clear(pTHX_ SV *const orig_sv)
+                 }
+             }
  #ifdef PERL_ANY_COW
--	    else if (SvPVX_const(sv)
--		     && !(SvTYPE(sv) == SVt_PVIO
--		     && !(IoFLAGS(sv) & IOf_FAKE_DIRP)))
-+	    else if (SvPVX_const(sv) /* PV is valid */
-+		     && !(SvTYPE(sv) == SVt_PVIO /* Not an IO pointer */
-+		     && !(IoFLAGS(sv) & IOf_FAKE_DIRP))) /*  */
- 	    {
- 		if (SvIsCOW(sv)) {
- #ifdef DEBUGGING
-@@ -6815,10 +6814,12 @@ Perl_sv_clear(pTHX_ SV *const orig_sv)
- 		    }
- #endif
- 		    if (SvLEN(sv)) {
--			if (CowREFCNT(sv)) {
--			    sv_buf_to_rw(sv);
--			    CowREFCNT(sv)--;
--			    sv_buf_to_ro(sv);
-+			if (CowREFCNT(sv) ) {
-+			    if(CowREFCNT(sv) != COW_STATIC ) {
-+                    sv_buf_to_rw(sv);
-+                    CowREFCNT(sv)--;
-+                    sv_buf_to_ro(sv);
-+                }
- 			    SvLEN_set(sv, 0);
- 			}
- 		    } else {
+-            else if (SvPVX_const(sv)
+-                     && !(SvTYPE(sv) == SVt_PVIO
++            else if (SvPVX_const(sv) /* PV is valid */
++                    && !(SvTYPE(sv) == SVt_PVIO /* Not an IO pointer */
+                      && !(IoFLAGS(sv) & IOf_FAKE_DIRP)))
+             {
+                 if (SvIsCOW(sv)) {
+@@ -6758,9 +6757,11 @@ Perl_sv_clear(pTHX_ SV *const orig_sv)
+                     }
+                     else {
+                         if (CowREFCNT(sv)) {
+-                            sv_buf_to_rw(sv);
+-                            CowREFCNT(sv)--;
+-                            sv_buf_to_ro(sv);
++                            if(CowREFCNT(sv) != COW_STATIC ) {
++                                sv_buf_to_rw(sv);
++                                CowREFCNT(sv)--;
++                                sv_buf_to_ro(sv);
++                            }
+                             SvLEN_set(sv, 0);
+                         }
+                     }
 diff --git a/SOURCES/perl/sv.h b/SOURCES/perl/sv.h
-index 8c135668..67e28f8f 100644
+index 7b21e712..5b35b052 100644
 --- a/SOURCES/perl/sv.h
 +++ b/SOURCES/perl/sv.h
-@@ -1971,7 +1971,7 @@ Like C<sv_catsv> but doesn't process magic.
+@@ -2102,7 +2102,7 @@ Returns the hash for C<sv> created by C<L</newSVpvn_share>>.
  #ifdef PERL_COPY_ON_WRITE
  #   define SvCANCOW(sv)					    \
- 	(SvIsCOW(sv)					     \
--	 ? SvLEN(sv) ? CowREFCNT(sv) != SV_COW_REFCNT_MAX : 1 \
-+	 ? 1 \
- 	 : (SvFLAGS(sv) & CAN_COW_MASK) == CAN_COW_FLAGS       \
- 			    && SvCUR(sv)+1 < SvLEN(sv))
+         (SvIsCOW(sv)					     \
+-         ? SvLEN(sv) ? CowREFCNT(sv) != SV_COW_REFCNT_MAX : 1 \
++         ? 1 \
+          : (SvFLAGS(sv) & CAN_COW_MASK) == CAN_COW_FLAGS       \
+                             && SvCUR(sv)+1 < SvLEN(sv))
     /* Note: To allow 256 COW "copies", a refcnt of 0 means 1. */
-@@ -1979,6 +1979,7 @@ Like C<sv_catsv> but doesn't process magic.
- #   define SV_COW_REFCNT_MAX	((1 << sizeof(U8)*8) - 1)
+@@ -2110,6 +2110,7 @@ Returns the hash for C<sv> created by C<L</newSVpvn_share>>.
+ #   define SV_COW_REFCNT_MAX	nBIT_UMAX(sizeof(U8) * CHARBITS)
  #   define CAN_COW_MASK	(SVf_POK|SVf_ROK|SVp_POK|SVf_FAKE| \
- 			 SVf_OOK|SVf_BREAK|SVf_READONLY|SVf_PROTECT)
+                          SVf_OOK|SVf_BREAK|SVf_READONLY|SVf_PROTECT)
 +#   define COW_STATIC SV_COW_REFCNT_MAX
  #endif
  

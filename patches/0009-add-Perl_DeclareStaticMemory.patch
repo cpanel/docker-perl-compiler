@@ -13,29 +13,29 @@ proto.h
  SOURCES/perl/embedvar.h |  3 +++
  SOURCES/perl/handy.h    |  4 ++++
  SOURCES/perl/intrpvar.h |  5 +++++
- SOURCES/perl/iperlsys.h |  6 +++---
+ SOURCES/perl/iperlsys.h |  4 ++--
  SOURCES/perl/proto.h    |  1 +
  SOURCES/perl/util.c     | 76 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++-
  SOURCES/perl/util.h     |  2 ++
- 9 files changed, 95 insertions(+), 4 deletions(-)
+ 9 files changed, 94 insertions(+), 3 deletions(-)
 
 diff --git a/SOURCES/perl/embed.fnc b/SOURCES/perl/embed.fnc
-index 589ab1a5..da0a935d 100644
+index 7da9faa0..c7a0636c 100644
 --- a/SOURCES/perl/embed.fnc
 +++ b/SOURCES/perl/embed.fnc
-@@ -2546,6 +2546,7 @@ Ap	|int	|get_mstats	|NN perl_mstats_t *buf|int buflen|int level
- ATpa	|Malloc_t|safesysmalloc	|MEM_SIZE nbytes
- ATpa	|Malloc_t|safesyscalloc	|MEM_SIZE elements|MEM_SIZE size
- ATpR	|Malloc_t|safesysrealloc|Malloc_t where|MEM_SIZE nbytes
+@@ -2718,6 +2718,7 @@ Cp	|int	|get_mstats	|NN perl_mstats_t *buf|int buflen|int level
+ ATdpa	|Malloc_t|safesysmalloc	|MEM_SIZE nbytes
+ ATdpa	|Malloc_t|safesyscalloc	|MEM_SIZE elements|MEM_SIZE size
+ ATdpR	|Malloc_t|safesysrealloc|Malloc_t where|MEM_SIZE nbytes
 +Anp     |void    |DeclareStaticMemory|Malloc_t from|Malloc_t to|MEM_SIZE size
- ATp	|Free_t	|safesysfree	|Malloc_t where
+ AdTp	|Free_t	|safesysfree	|Malloc_t where
  CrTp	|void	|croak_memory_wrap
- #if defined(PERL_GLOBAL_STRUCT)
+ Cpdh	|int	|runops_standard
 diff --git a/SOURCES/perl/embed.h b/SOURCES/perl/embed.h
-index 182b12aa..80c394e1 100644
+index c221a8e2..dbbfa270 100644
 --- a/SOURCES/perl/embed.h
 +++ b/SOURCES/perl/embed.h
-@@ -26,6 +26,7 @@
+@@ -28,6 +28,7 @@
  
  /* Hide global symbols */
  
@@ -44,10 +44,10 @@ index 182b12aa..80c394e1 100644
  #define SvAMAGIC_off		Perl_SvAMAGIC_off
  #define SvAMAGIC_on		Perl_SvAMAGIC_on
 diff --git a/SOURCES/perl/embedvar.h b/SOURCES/perl/embedvar.h
-index de1aa999..2ee1b8a6 100644
+index 11989eb8..c89e257d 100644
 --- a/SOURCES/perl/embedvar.h
 +++ b/SOURCES/perl/embedvar.h
-@@ -310,6 +310,9 @@
+@@ -289,6 +289,9 @@
  #define PL_stashpadmax		(vTHX->Istashpadmax)
  #define PL_statcache		(vTHX->Istatcache)
  #define PL_statgv		(vTHX->Istatgv)
@@ -58,10 +58,10 @@ index de1aa999..2ee1b8a6 100644
  #define PL_statusvalue		(vTHX->Istatusvalue)
  #define PL_statusvalue_posix	(vTHX->Istatusvalue_posix)
 diff --git a/SOURCES/perl/handy.h b/SOURCES/perl/handy.h
-index fd086682..5f735160 100644
+index 32e4da5f..599ba373 100644
 --- a/SOURCES/perl/handy.h
 +++ b/SOURCES/perl/handy.h
-@@ -2576,6 +2576,10 @@ void Perl_mem_log_del_sv(const SV *sv, const char *filename, const int linenumbe
+@@ -2762,6 +2762,10 @@ void Perl_mem_log_del_sv(const SV *sv, const char *filename, const int linenumbe
  #define Newxc(v,n,t,c)	(v = (MEM_WRAP_CHECK_(n,t) (c*)MEM_LOG_ALLOC(n,t,safemalloc((MEM_SIZE)((n)*sizeof(t))))))
  #define Newxz(v,n,t)	(v = (MEM_WRAP_CHECK_(n,t) (t*)MEM_LOG_ALLOC(n,t,safecalloc((n),sizeof(t)))))
  
@@ -73,12 +73,12 @@ index fd086682..5f735160 100644
  /* pre 5.9.x compatibility */
  #define New(x,v,n,t)	Newx(v,n,t)
 diff --git a/SOURCES/perl/intrpvar.h b/SOURCES/perl/intrpvar.h
-index 23de9d9c..a4a6a969 100644
+index 94ddbf67..fa590d4a 100644
 --- a/SOURCES/perl/intrpvar.h
 +++ b/SOURCES/perl/intrpvar.h
-@@ -950,6 +950,11 @@ PERLVAR(I, mbrtowc_ps, mbstate_t)
- PERLVAR(I, wcrtomb_ps, mbstate_t)
- #endif
+@@ -1049,6 +1049,11 @@ PERLVARA(I, mem_log, 1 + 1 + TYPE_DIGITS(UV) + 1 + 3 + 1, char)
+  * have to worry about SV refcounts during scope enter/exit. */
+ PERLVAR(I, prevailing_version, U16)
  
 +/* statics variables for StaticMemory management */
 +PERLVARI(I, static_memory_from,        Malloc_t,       0)      /* first memory address where we have declared a usage of static memory */
@@ -89,38 +89,29 @@ index 23de9d9c..a4a6a969 100644
   * above on where there are gaps which currently will be structure padding.  */
  
 diff --git a/SOURCES/perl/iperlsys.h b/SOURCES/perl/iperlsys.h
-index c176ad5c..1c25492e 100644
+index b922af0e..e822be0b 100644
 --- a/SOURCES/perl/iperlsys.h
 +++ b/SOURCES/perl/iperlsys.h
-@@ -843,7 +843,7 @@ struct IPerlMemInfo
- #define PerlMemShared_realloc(buf, size)		    \
- 	(*PL_Mem->pRealloc)(PL_Mem, (buf), (size))
- #define PerlMemShared_free(buf)				    \
--	(*PL_Mem->pFree)(PL_Mem, (buf))
-+    (_check_static_memory_address((buf)) ? 0 : (*PL_Mem->pFree)(PL_Mem, (buf)))
- #define PerlMemShared_calloc(num, size)			    \
- 	(*PL_Mem->pCalloc)(PL_Mem, (num), (size))
- #define PerlMemShared_get_lock()			    \
-@@ -860,7 +860,7 @@ struct IPerlMemInfo
- #define PerlMemShared_realloc(buf, size)		    \
- 	(*PL_MemShared->pRealloc)(PL_MemShared, (buf), (size))
- #define PerlMemShared_free(buf)				    \
--	(*PL_MemShared->pFree)(PL_MemShared, (buf))
-+	(_check_static_memory_address((buf)) ? 0 : (*PL_MemShared->pFree)(PL_MemShared, (buf)))
- #define PerlMemShared_calloc(num, size)			    \
- 	(*PL_MemShared->pCalloc)(PL_MemShared, (num), (size))
- #define PerlMemShared_get_lock()			    \
-@@ -903,7 +903,7 @@ struct IPerlMemInfo
+@@ -859,7 +859,7 @@ struct IPerlMemInfo
+ #  define PerlMemShared_realloc(buf, size)                  \
+         (*PL_MemShared->pRealloc)(PL_MemShared, (buf), (size))
+ #  define PerlMemShared_free(buf)                           \
+-        (*PL_MemShared->pFree)(PL_MemShared, (buf))
++        (_check_static_memory_address((buf)) ? 0 : (*PL_MemShared->pFree)(PL_MemShared, (buf)))
+ #  define PerlMemShared_calloc(num, size)                   \
+         (*PL_MemShared->pCalloc)(PL_MemShared, (num), (size))
+ #  define PerlMemShared_get_lock()                          \
+@@ -900,7 +900,7 @@ struct IPerlMemInfo
  /* Shared memory macros */
- #define PerlMemShared_malloc(size)		malloc((size))
- #define PerlMemShared_realloc(buf, size)	realloc((buf), (size))
--#define PerlMemShared_free(buf)			free((buf))
-+#define PerlMemShared_free(buf)                        (_check_static_memory_address((buf)) ? 0 : free((buf)))
- #define PerlMemShared_calloc(num, size)		calloc((num), (size))
- #define PerlMemShared_get_lock()		
- #define PerlMemShared_free_lock()
+ #  define PerlMemShared_malloc(size)            malloc((size))
+ #  define PerlMemShared_realloc(buf, size)      realloc((buf), (size))
+-#  define PerlMemShared_free(buf)               free((buf))
++#  define PerlMemShared_free(buf)               (_check_static_memory_address((buf)) ? 0 : free((buf)))
+ #  define PerlMemShared_calloc(num, size)       calloc((num), (size))
+ #  define PerlMemShared_get_lock()              
+ #  define PerlMemShared_free_lock()
 diff --git a/SOURCES/perl/proto.h b/SOURCES/perl/proto.h
-index 02ef4edb..55354869 100644
+index 873347ca..1bbf7fa8 100644
 --- a/SOURCES/perl/proto.h
 +++ b/SOURCES/perl/proto.h
 @@ -35,6 +35,7 @@ PERL_STATIC_INLINE GV *	Perl_CvGV(pTHX_ CV *sv);
@@ -132,45 +123,45 @@ index 02ef4edb..55354869 100644
  #define PERL_ARGS_ASSERT_GV_AMUPDATE	\
  	assert(stash)
 diff --git a/SOURCES/perl/util.c b/SOURCES/perl/util.c
-index c64e88dd..3f3672f0 100644
+index ca7d3748..a39e85f2 100644
 --- a/SOURCES/perl/util.c
 +++ b/SOURCES/perl/util.c
-@@ -207,6 +207,64 @@ Perl_safesysmalloc(MEM_SIZE size)
+@@ -213,6 +213,64 @@ Perl_safesysmalloc(MEM_SIZE size)
      return ptr;
  }
  
 +/* used by B::C to declare static memory blocks */
 +/*
 +* sample usages:
-+*	- DeclareStaticMemory( (Malloc_t) &sv_list[0], (Malloc_t) &sv_list[1234],  sizeof(sv_list[0]) ); // sv_list
++*   - DeclareStaticMemory( (Malloc_t) &sv_list[0], (Malloc_t) &sv_list[1234],  sizeof(sv_list[0]) ); // sv_list
 +*   - DeclareStaticMemory( (Malloc_t) &gv_list[0], (Malloc_t) &gv_list[45647], sizeof(gv_list[0]) ); // gv_list
 +*   ...
 +*/
 +void DeclareStaticMemory( Malloc_t from, Malloc_t to, MEM_SIZE size ) {
-+	STATIC_MEMORY_AREA *static_p = 0; /* pointer to our static memor */
++    STATIC_MEMORY_AREA *static_p = 0; /* pointer to our static memor */
 +
-+	/* malloc one static_memory struct entry */
-+	Newx(static_p, 1, STATIC_MEMORY_AREA);
++    /* malloc one static_memory struct entry */
++    Newx(static_p, 1, STATIC_MEMORY_AREA);
 +
-+	/* save our declaration to the struct object */
-+	static_p->from 	= from;
-+	static_p->to 	= to;
-+	static_p->size 	= size;
++    /* save our declaration to the struct object */
++    static_p->from  = from;
++    static_p->to    = to;
++    static_p->size  = size;
 +
-+	/* save min & max to quickly check if we are in the static range */
-+	/* minimal FROM value: speedup for first range check */
-+	if ( ! PL_static_memory_from || (unsigned long) from < (unsigned long) PL_static_memory_from ) {
-+		PL_static_memory_from = from;
-+	}
++    /* save min & max to quickly check if we are in the static range */
++    /* minimal FROM value: speedup for first range check */
++    if ( ! PL_static_memory_from || (unsigned long) from < (unsigned long) PL_static_memory_from ) {
++        PL_static_memory_from = from;
++    }
 +
-+	/* max TO value: speedup for first range check */
-+	if ( ! PL_static_memory_to || (unsigned long) to > (unsigned long) PL_static_memory_to ) {
-+		PL_static_memory_to = to;
-+	}
++    /* max TO value: speedup for first range check */
++    if ( ! PL_static_memory_to || (unsigned long) to > (unsigned long) PL_static_memory_to ) {
++        PL_static_memory_to = to;
++    }
 +
-+	/* move our struct first in the global linked list */
-+	static_p->next 	= PL_static_memory_buffer; /* very first is initialize to 0 */
-+	PL_static_memory_buffer = static_p;
++    /* move our struct first in the global linked list */
++    static_p->next  = PL_static_memory_buffer; /* very first is initialize to 0 */
++    PL_static_memory_buffer = static_p;
 +
 +}
 +
@@ -179,47 +170,47 @@ index c64e88dd..3f3672f0 100644
 +_check_static_memory_address(Malloc_t where) {
 +    /* no free when memory is in static known territory */
 +    if (UNLIKELY( PL_static_memory_from && where &&
-+			PTR2UV(PL_static_memory_from) <= PTR2UV(where) && PTR2UV(where) <= PTR2UV(PL_static_memory_to))
-+		) {
-+		/* investigate: maybe this extra deep check is not required... ??? */
-+		/* we know we are in the main static range, for safety purpose double check that we can find it somewhere */
-+		STATIC_MEMORY_AREA *static_p = PL_static_memory_buffer;
-+		while (static_p) {
-+			if (PTR2UV(static_p->from) <= PTR2UV(where) && PTR2UV(where) <= PTR2UV(static_p->to) ) {
-+				/* no free there we know this place */
-+				return static_p;
-+			}
-+			/* check the next */
-+			static_p = static_p->next;
-+		}
++            PTR2UV(PL_static_memory_from) <= PTR2UV(where) && PTR2UV(where) <= PTR2UV(PL_static_memory_to))
++        ) {
++        /* investigate: maybe this extra deep check is not required... ??? */
++        /* we know we are in the main static range, for safety purpose double check that we can find it somewhere */
++        STATIC_MEMORY_AREA *static_p = PL_static_memory_buffer;
++        while (static_p) {
++            if (PTR2UV(static_p->from) <= PTR2UV(where) && PTR2UV(where) <= PTR2UV(static_p->to) ) {
++                /* no free there we know this place */
++                return static_p;
++            }
++            /* check the next */
++            static_p = static_p->next;
++        }
 +    }
 +
 +    return 0;
 +}
 +
- /* paranoid version of system's realloc() */
- 
- Malloc_t
-@@ -276,7 +334,17 @@ Perl_safesysrealloc(Malloc_t where,MEM_SIZE size)
- 	    abort();
- 	}
+ /*
+ =for apidoc safesysrealloc
+ Paranoid version of system's realloc()
+@@ -287,7 +345,17 @@ Perl_safesysrealloc(Malloc_t where,MEM_SIZE size)
+             abort();
+         }
  #else
--	ptr = (Malloc_t)PerlMem_realloc(where,size);
-+	{
-+		STATIC_MEMORY_AREA *static_p = _check_static_memory_address(where);
-+		if ( static_p && static_p->size ) {
-+			/* when the memory is a static address, alloc a new block of memory and copy the previous content to it */
-+			ptr = safesysmalloc(size);
-+			Copy(where,ptr,static_p->size < size ? static_p->size : size,char);
-+		} else {
-+			ptr = (Malloc_t)PerlMem_realloc(where,size);
-+		}
-+	}
+-        ptr = (Malloc_t)PerlMem_realloc(where,size);
++        {
++            STATIC_MEMORY_AREA *static_p = _check_static_memory_address(where);
++            if ( static_p && static_p->size ) {
++                /* when the memory is a static address, alloc a new block of memory and copy the previous content to it */
++               ptr = safesysmalloc(size);
++               Copy(where,ptr,static_p->size < size ? static_p->size : size,char);
++            } else {
++               ptr = (Malloc_t)PerlMem_realloc(where,size);
++            }
++        }
 +
  #endif
- 	PERL_ALLOC_CHECK(ptr);
+         PERL_ALLOC_CHECK(ptr);
  
-@@ -345,6 +413,12 @@ Perl_safesysfree(Malloc_t where)
+@@ -361,6 +429,12 @@ Perl_safesysfree(Malloc_t where)
      dTHX;
  #endif
      DEBUG_m( PerlIO_printf(Perl_debug_log, "0x%" UVxf ": (%05ld) free\n",PTR2UV(where),(long)PL_an++));
@@ -231,13 +222,13 @@ index c64e88dd..3f3672f0 100644
 +
      if (where) {
  #ifdef USE_MDH
- 	Malloc_t where_intrn = (Malloc_t)((char*)where-PERL_MEMORY_DEBUG_HEADER_SIZE);
+         Malloc_t where_intrn = (Malloc_t)((char*)where-PERL_MEMORY_DEBUG_HEADER_SIZE);
 diff --git a/SOURCES/perl/util.h b/SOURCES/perl/util.h
-index 6294e590..f5518ff1 100644
+index d3f903a8..fc4fd3b7 100644
 --- a/SOURCES/perl/util.h
 +++ b/SOURCES/perl/util.h
-@@ -200,6 +200,8 @@ means arg not present, 1 is empty string/null byte */
- #define HS_GETXSVERLEN(key) ((key) >> 8 & 0xFF)
+@@ -201,6 +201,8 @@ means arg not present, 1 is empty string/null byte */
+ #define HS_GETXSVERLEN(key) ((U8) ((key) >> 8))
  #define HS_GETAPIVERLEN(key) ((key) & HSm_APIVERLEN)
  
 +STATIC_MEMORY_AREA *_check_static_memory_address(Malloc_t where);

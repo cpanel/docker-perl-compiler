@@ -1,0 +1,261 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Tony Cook <tony@develop-help.com>
+Date: Tue, 3 Oct 2023 09:40:07 +1100
+Subject: [PATCH] win32: default the shell to cmd.exe in the Windows system
+ directory
+
+This prevents picking up cmd.exe from the current directory, or
+even from the PATH.
+
+This protects against a privilege escalation attack where an attacker
+in a separate session creates a cmd.exe in a directory where the
+target account happens to have its current directory.
+---
+ SOURCES/perl/t/win32/system.t | 30 ++++++++++++++++++------------
+ SOURCES/perl/win32/win32.c    | 91 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++--------------------
+ 2 files changed, 89 insertions(+), 32 deletions(-)
+
+diff --git a/SOURCES/perl/t/win32/system.t b/SOURCES/perl/t/win32/system.t
+index 939a02db..c8850590 100644
+--- a/SOURCES/perl/t/win32/system.t
++++ b/SOURCES/perl/t/win32/system.t
+@@ -82,6 +82,7 @@ close $F;
+ chdir($testdir);
+ END {
+     chdir($cwd) && rmtree("$cwd/$testdir") if -d "$cwd/$testdir";
++    unlink "cmd.exe";
+ }
+ if (open(my $EIN, "$cwd/win32/${exename}_exe.uu")) {
+     note "Unpacking $exename.exe";
+@@ -104,21 +105,20 @@ else {
+      }
+     note "Compiling $exename.c";
+     note "$Config{cc} $Config{ccflags} $exename.c";
+-    if (system("$Config{cc} $Config{ccflags} $minus_o $exename.c >log 2>&1") != 0) {
++    if (system("$Config{cc} $Config{ccflags} $minus_o $exename.c >log 2>&1") != 0 ||
++        !-f "$exename.exe") {
+ 	note "Could not compile $exename.c, status $?";
+-    note "Where is your C compiler?";
+-    skip_all "can't build test executable";
+-    }
+-    unless (-f "$exename.exe") {
+-	if (open(LOG,'<log'))
+-         {
+-          while(<LOG>) {
+-              note $_;
+-          } 
+-         }
++        note "Where is your C compiler?";
++        if (open(LOG,'<log'))
++        {
++            while(<LOG>) {
++                note $_;
++            }
++        }
+         else {
+-	  warn "Cannot open log (in $testdir):$!";
++            warn "Cannot open log (in $testdir):$!";
+         }
++        skip_all "can't build test executable";
+     }
+ }
+ copy("$plxname.bat","$plxname.cmd");
+@@ -128,6 +128,12 @@ unless (-x "$testdir/$exename.exe") {
+     skip_all "can't build test executable";
+ }
+ 
++# test we only look for cmd.exe in the standard place
++delete $ENV{PERLSHELL};
++copy("$testdir/$exename.exe", "$testdir/cmd.exe") or die $!;
++copy("$testdir/$exename.exe", "cmd.exe") or die $!;
++$ENV{PATH} = qq("$testdir";$ENV{PATH});
++
+ open my $T, "$^X -I../lib -w win32/system_tests |"
+     or die "Can't spawn win32/system_tests: $!";
+ my $expect;
+diff --git a/SOURCES/perl/win32/win32.c b/SOURCES/perl/win32/win32.c
+index 78a4c856..14dfa6a0 100644
+--- a/SOURCES/perl/win32/win32.c
++++ b/SOURCES/perl/win32/win32.c
+@@ -72,7 +72,7 @@
+ int _CRT_glob = 0;
+ #endif
+ 
+-#if defined(__MINGW32__) && (__MINGW32_MAJOR_VERSION==1)	
++#if defined(__MINGW32__) && (__MINGW32_MAJOR_VERSION==1)
+ /* Mingw32-1.1 is missing some prototypes */
+ START_EXTERN_C
+ FILE * _wfopen(LPCWSTR wszFileName, LPCWSTR wszMode);
+@@ -116,7 +116,7 @@ static char*	win32_get_xlib(const char *pl,
+ 
+ static BOOL	has_shell_metachars(const char *ptr);
+ static long	tokenize(const char *str, char **dest, char ***destv);
+-static void	get_shell(void);
++static int	get_shell(void);
+ static char*	find_next_space(const char *s);
+ static int	do_spawn2(pTHX_ const char *cmd, int exectype);
+ static int	do_spawn2_handles(pTHX_ const char *cmd, int exectype,
+@@ -204,9 +204,9 @@ set_silent_invalid_parameter_handler(BOOL newvalue)
+ 
+ static void
+ my_invalid_parameter_handler(const wchar_t* expression,
+-    const wchar_t* function, 
+-    const wchar_t* file, 
+-    unsigned int line, 
++    const wchar_t* function,
++    const wchar_t* file,
++    unsigned int line,
+     uintptr_t pReserved)
+ {
+ #  ifdef _DEBUG
+@@ -602,7 +602,13 @@ tokenize(const char *str, char **dest, char ***destv)
+     return items;
+ }
+ 
+-static void
++static const char
++cmd_opts[] = "/x/d/c";
++
++static const char
++shell_cmd[] = "cmd.exe";
++
++static int
+ get_shell(void)
+ {
+     dTHX;
+@@ -614,12 +620,53 @@ get_shell(void)
+          *     interactive use (which is what most programs look in COMSPEC
+          *     for).
+          */
+-        const char* defaultshell = "cmd.exe /x/d/c";
+-        const char *usershell = PerlEnv_getenv("PERL5SHELL");
+-        w32_perlshell_items = tokenize(usershell ? usershell : defaultshell,
+-                                       &w32_perlshell_tokens,
+-                                       &w32_perlshell_vec);
++        const char *shell = PerlEnv_getenv("PERL5SHELL");
++        if (shell) {
++            w32_perlshell_items = tokenize(shell,
++                                           &w32_perlshell_tokens,
++                                           &w32_perlshell_vec);
++        }
++        else {
++            /* tokenize does some Unix-ish like things like
++               \\ escaping that don't work well here
++            */
++            char shellbuf[MAX_PATH];
++            UINT len = GetSystemDirectoryA(shellbuf, sizeof(shellbuf));
++            if (len == 0) {
++                translate_to_errno();
++                return -1;
++            }
++            else if (len >= MAX_PATH) {
++                /* buffer too small */
++                errno = E2BIG;
++                return -1;
++            }
++            if (shellbuf[len-1] != '\\') {
++                my_strlcat(shellbuf, "\\", sizeof(shellbuf));
++                ++len;
++            }
++            if (len + sizeof(shell_cmd) > sizeof(shellbuf)) {
++                errno = E2BIG;
++                return -1;
++            }
++            my_strlcat(shellbuf, shell_cmd, sizeof(shellbuf));
++            len += sizeof(shell_cmd)-1;
++
++            Newx(w32_perlshell_vec, 3, char *);
++            Newx(w32_perlshell_tokens, len + 1 + sizeof(cmd_opts), char);
++
++            my_strlcpy(w32_perlshell_tokens, shellbuf, len+1);
++            my_strlcpy(w32_perlshell_tokens + len +1, cmd_opts,
++                       sizeof(cmd_opts));
++
++            w32_perlshell_vec[0] = w32_perlshell_tokens;
++            w32_perlshell_vec[1] = w32_perlshell_tokens + len + 1;
++            w32_perlshell_vec[2] = NULL;
++
++            w32_perlshell_items = 2;
++        }
+     }
++    return 0;
+ }
+ 
+ int
+@@ -637,7 +684,9 @@ Perl_do_aspawn(pTHX_ SV *really, SV **mark, SV **sp)
+     if (sp <= mark)
+         return -1;
+ 
+-    get_shell();
++    if (get_shell() < 0)
++        return -1;
++
+     Newx(argv, (sp - mark) + w32_perlshell_items + 2, char*);
+ 
+     if (SvNIOKp(*(mark+1)) && !SvPOKp(*(mark+1))) {
+@@ -767,7 +816,8 @@ do_spawn2_handles(pTHX_ const char *cmd, int exectype, const int *handles)
+     if (needToTry) {
+         char **argv;
+         int i = -1;
+-        get_shell();
++        if (get_shell() < 0)
++            return -1;
+         Newx(argv, w32_perlshell_items + 2, char*);
+         while (++i < w32_perlshell_items)
+             argv[i] = w32_perlshell_vec[i];
+@@ -2069,14 +2119,14 @@ win32_getenvironmentstrings(void)
+     }
+ 
+     /* Get the number of bytes required to store the ACP encoded string */
+-    aenvstrings_len = WideCharToMultiByte(CP_ACP, WC_NO_BEST_FIT_CHARS, 
++    aenvstrings_len = WideCharToMultiByte(CP_ACP, WC_NO_BEST_FIT_CHARS,
+                                           lpWStr, wenvstrings_len, NULL, 0, NULL, NULL);
+     lpTmp = lpStr = (char *)win32_calloc(aenvstrings_len, sizeof(char));
+     if(!lpTmp)
+         out_of_memory();
+ 
+     /* Convert the string from UTF-16 encoding to ACP encoding */
+-    WideCharToMultiByte(CP_ACP, WC_NO_BEST_FIT_CHARS, lpWStr, wenvstrings_len, lpStr, 
++    WideCharToMultiByte(CP_ACP, WC_NO_BEST_FIT_CHARS, lpWStr, wenvstrings_len, lpStr,
+                         aenvstrings_len, NULL, NULL);
+ 
+     FreeEnvironmentStringsW(lpWStr);
+@@ -2437,7 +2487,7 @@ win32_uname(struct utsname *name)
+ /* Timing related stuff */
+ 
+ int
+-do_raise(pTHX_ int sig) 
++do_raise(pTHX_ int sig)
+ {
+     if (sig < SIG_SIZE) {
+         Sighandler_t handler = w32_sighandler[sig];
+@@ -2473,8 +2523,8 @@ void
+ sig_terminate(pTHX_ int sig)
+ {
+     Perl_warn(aTHX_ "Terminating on signal SIG%s(%d)\n",PL_sig_name[sig], sig);
+-    /* exit() seems to be safe, my_exit() or die() is a problem in ^C 
+-       thread 
++    /* exit() seems to be safe, my_exit() or die() is a problem in ^C
++       thread
+      */
+     exit(sig);
+ }
+@@ -2525,7 +2575,7 @@ win32_async_check(pTHX)
+     /* Above or other stuff may have set a signal flag */
+     if (PL_sig_pending)
+         despatch_signals();
+-    
++
+     return 1;
+ }
+ 
+@@ -3268,7 +3318,8 @@ win32_pipe(int *pfd, unsigned int size, int mode)
+ DllExport PerlIO*
+ win32_popenlist(const char *mode, IV narg, SV **args)
+ {
+-    get_shell();
++    if (get_shell() < 0)
++        return NULL;
+ 
+     return do_popen(mode, NULL, narg, args);
+ }

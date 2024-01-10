@@ -1,0 +1,34 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Nicolas Rochelemagne <rochelemagne@cpanel.net>
+Date: Fri, 6 Jan 2023 19:25:37 -0500
+Subject: [PATCH] Setup EXPORT_FAIL in Fcntl
+
+Case CPANEL-42221:
+
+This is a mitigation fix as the perl compiler does not store
+and init properly the AVs for empty arrays.
+
+This is avoiding SEGV when loading packages at run time
+which imports stuff from Fcntl when setting backref for
+Fcntl::EXPORT_FAIL array.
+
+URL: https://github.com/cpanel/perl-compiler/pull/99
+
+Refs: CPANEL-42007
+---
+ SOURCES/perl/ext/Fcntl/Fcntl.pm | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/SOURCES/perl/ext/Fcntl/Fcntl.pm b/SOURCES/perl/ext/Fcntl/Fcntl.pm
+index 57687e62..c71b11c0 100644
+--- a/SOURCES/perl/ext/Fcntl/Fcntl.pm
++++ b/SOURCES/perl/ext/Fcntl/Fcntl.pm
+@@ -61,6 +61,8 @@ use Exporter 'import';
+ require XSLoader;
+ our $VERSION = '1.15';
+ 
++our @EXPORT_FAIL;
++
+ XSLoader::load();
+ 
+ # Named groups of exports

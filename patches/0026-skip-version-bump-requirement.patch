@@ -1,0 +1,23 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Nicolas R <atoomic@cpan.org>
+Date: Thu, 31 Mar 2022 22:32:17 +0000
+Subject: [PATCH] skip version bump requirement
+
+---
+ SOURCES/perl/t/porting/cmp_version.t | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/SOURCES/perl/t/porting/cmp_version.t b/SOURCES/perl/t/porting/cmp_version.t
+index 0573e2f8..b82bcf07 100644
+--- a/SOURCES/perl/t/porting/cmp_version.t
++++ b/SOURCES/perl/t/porting/cmp_version.t
+@@ -25,6 +25,9 @@ use TestInit qw(T A); # T is chdir to the top level, A makes paths absolute
+ use strict;
+ 
+ require './t/test.pl';
++
++skip_all( "cPanel build: skip version bump requirement" );
++
+ my $source = find_git_or_skip('all');
+ chdir $source or die "Can't chdir to $source: $!";
+ 
