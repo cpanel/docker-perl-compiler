@@ -23,12 +23,12 @@ You can trigger a manual build locally using:
 ### Testing a container
 
 You can test locally the container by overriding the entrypoint then bash to it.
-Adjust the tag `cpanelos/perl-compiler:perl-v5.32.0` to point to any other flavor you want.
+Adjust the tag `cpanelos/perl-compiler:perl-v5.36.0` to point to any other flavor you want.
 (for example `cpanelos/perl-compiler:latest`)
 
-    docker pull cpanelos/perl-compiler:perl-v5.32.0
+    docker pull cpanelos/perl-compiler:perl-v5.36.0
     docker rm -f mytest
-    docker run --name mytest  --entrypoint "/bin/bash" -it -d cpanelos/perl-compiler:perl-v5.32.0
+    docker run --name mytest  --entrypoint "/bin/bash" -it -d cpanelos/perl-compiler:perl-v5.36.0
 
     docker ps -a
     docker exec -it mytest bash
