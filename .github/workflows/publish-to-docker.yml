@@ -1,6 +1,8 @@
 # https://github.com/marketplace/actions/publish-docker
 name: Publish to Docker
-on: [push]
+on: 
+  push:
+  workflow_dispatch:
 jobs:
   build:
     runs-on: ubuntu-latest
