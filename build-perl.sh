@@ -12,8 +12,8 @@ echo "*********************************"
 
 WORKDIR="$(pwd)"
 
-PERL_VERSION=5.32.0
-PERL_MAJOR_VERSION=532
+PERL_VERSION=5.36.0
+PERL_MAJOR_VERSION=536
 PERL_TAG=v${PERL_VERSION}
 
 PERL_NAME=cpanel
@@ -60,7 +60,6 @@ sh Configure -des \
    -Dusemymalloc='n' \
    -DDEBUGGING=none \
    -Doptimize='-g3' \
-   -Accflags='-m64' \
    -Dccflags='-DPERL_DISABLE_PMC -fPIC -DPIC' \
    -Duseshrplib \
    -Duselargefiles=yes \
