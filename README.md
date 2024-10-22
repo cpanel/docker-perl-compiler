@@ -1,5 +1,10 @@
 # Docker container for the Perl Compiler
 
+> **⚠️ Warning:** Legacy Repository
+> 
+> - That project was moved to https://github.com/webpros-cpanel/docker-perl-compiler
+>
+
 ## Summary
 
 Docker container recipes to build Perl with a few extra patches required by the Perl Compiler.
